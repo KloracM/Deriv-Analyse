@@ -214,7 +214,17 @@ function connect() {
 
             markets = allMarkets.filter(market => {
 
-                return market.market === "synthetic_index";
+    return market.market === "synthetic_index" ||
+           market.subgroup === "synthetics";
+
+});
+
+markets.sort((a, b) =>
+    (a.underlying_symbol_name || a.underlying_symbol)
+    .localeCompare(
+        b.underlying_symbol_name || b.underlying_symbol
+    )
+);
 
             });
 
@@ -313,10 +323,66 @@ function renderMarkets() {
 
     const filtered = markets.filter(market => {
 
+        const name = market.underlying_symbol_name || "";
+        const symbol = market.underlying_symbol || "";
+
         return (
-            market.display_name.toLowerCase().includes(search) ||
-            market.symbol.toLowerCase().includes(search)
+            name.toLowerCase().includes(search) ||
+            symbol.toLowerCase().includes(search)
         );
+
+    });
+
+    list.innerHTML = "";
+
+    selector.innerHTML = "";
+
+    filtered.forEach(market => {
+
+        const name = market.underlying_symbol_name;
+        const symbol = market.underlying_symbol;
+
+        const item = document.createElement("div");
+
+        item.className = "market-item";
+
+        item.innerHTML = `
+            <strong>${name}</strong>
+            <div class="small">${symbol}</div>
+        `;
+
+        list.appendChild(item);
+
+        const option = document.createElement("option");
+
+        option.value = symbol;
+        option.textContent = name;
+
+        selector.appendChild(option);
+
+    });
+
+    if (filtered.length > 0) {
+
+        if (!filtered.some(m =>
+            m.underlying_symbol === selectedSymbol
+        )) {
+            selectedSymbol =
+                filtered[0].underlying_symbol;
+        }
+
+        selector.value = selectedSymbol;
+
+        subscribeMarket(selectedSymbol);
+
+    } else {
+
+        selector.innerHTML =
+            '<option value="">No matching markets</option>';
+
+    }
+
+}
 
     });
 
