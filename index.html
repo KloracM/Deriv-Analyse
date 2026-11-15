@@ -3,82 +3,115 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Deriv Analyser Pro</title>
+
+<title>Deriv Market Analyser</title>
 
 <style>
-* { box-sizing: border-box; }
+* {
+    box-sizing: border-box;
+}
 
 body {
     margin: 0;
     padding: 15px;
-    background: #09111f;
+    background: #101820;
     color: white;
     font-family: Arial, sans-serif;
 }
 
 header {
-    background: #17243a;
-    padding: 20px;
-    text-align: center;
+    padding: 18px;
+    background: #172631;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+h1 {
+    color: #00d9a5;
+    font-size: 23px;
+    margin: 0 0 10px;
+}
+
+h2 {
+    font-size: 18px;
+    color: #00d9a5;
+}
+
+.card {
+    background: #172631;
+    padding: 16px;
+    margin-bottom: 15px;
     border-radius: 12px;
 }
 
-h1 { color: #00d9a5; }
-
-.card {
-    background: #17243a;
-    padding: 16px;
-    margin: 15px 0;
-    border-radius: 10px;
-}
-
-.status {
-    color: #00d9a5;
+#status {
+    color: #ffc857;
     font-weight: bold;
 }
 
-select, input {
+#market-count {
+    color: #00d9a5;
+    margin-top: 10px;
+}
+
+input, select {
     width: 100%;
     padding: 13px;
     margin-top: 10px;
-    background: #09111f;
-    color: white;
-    border: 1px solid #33445e;
+    border: none;
     border-radius: 7px;
-}
-
-.price {
-    font-size: 30px;
-    color: #00d9a5;
-    font-weight: bold;
-    margin-top: 15px;
-}
-
-.market-item {
-    padding: 12px;
-    border-bottom: 1px solid #33445e;
+    background: #263b49;
+    color: white;
+    font-size: 15px;
 }
 
 button {
-    background: #00d9a5;
-    color: #09111f;
-    border: none;
     padding: 12px;
+    border: none;
     border-radius: 7px;
-    margin-top: 10px;
+    background: #00d9a5;
+    color: #101820;
     font-weight: bold;
-    width: 100%;
+    cursor: pointer;
+    margin-top: 10px;
 }
 
-.small {
-    color: #9caec5;
-    font-size: 13px;
+#price {
+    font-size: 30px;
+    font-weight: bold;
+    color: #00d9a5;
+    margin: 15px 0;
+}
+
+#movement {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.market-item {
+    background: #263b49;
+    padding: 12px;
+    border-radius: 7px;
+    margin-top: 8px;
+    cursor: pointer;
+}
+
+.market-item:hover {
+    background: #345365;
+}
+
+pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-size: 11px;
+    color: #00d9a5;
 }
 
 footer {
     text-align: center;
-    color: #8996a8;
-    margin-top: 25px;
+    color: #8999a4;
+    padding: 15px;
+    font-size: 12px;
 }
 </style>
 </head>
@@ -86,23 +119,14 @@ footer {
 <body>
 
 <header>
-    <h1>DERIV ANALYSER PRO</h1>
-    <p>Advanced Synthetic Market Monitor</p>
+    <h1>DERIV MARKET ANALYSER</h1>
+    <div>Live Synthetic Indices Dashboard</div>
+    <p id="status">Connecting to Deriv...</p>
+    <div id="market-count">Waiting for markets...</div>
 </header>
 
 <div class="card">
-    <h3>Connection Status</h3>
-    <div class="status" id="status">
-        Connecting to Deriv...
-    </div>
-</div>
-
-<div class="card">
-    <h3>Market Discovery</h3>
-
-    <p class="small" id="market-count">
-        Discovering available markets...
-    </p>
+    <h2>Market Search</h2>
 
     <input
         type="text"
@@ -110,269 +134,200 @@ footer {
         placeholder="Search synthetic markets..."
     >
 
+    <div id="market-list">
+        Waiting for market data...
+    </div>
+</div>
+
+<div class="card">
+    <h2>Selected Market</h2>
+
     <select id="market-select">
         <option value="">Waiting for markets...</option>
     </select>
+
+    <h2>Live Price</h2>
+
+    <div id="selected-name">No market selected</div>
+
+    <div id="price">---</div>
+
+    <div id="movement">Waiting for live prices...</div>
 </div>
 
 <div class="card">
-    <h3>Selected Market</h3>
-
-    <div id="selected-name">
-        No market selected
-    </div>
-
-    <div class="price" id="price">
-        ---
-    </div>
-
-    <p id="movement" class="small">
-        Waiting for live prices...
-    </p>
-</div>
-
-<div class="card">
-    <h3>Available Synthetic Markets</h3>
-    <div id="market-list">
-        Loading markets...
-    </div>
+    <h2>Connection Information</h2>
+    <div id="connection-info">Starting...</div>
 </div>
 
 <footer>
-    DERIV ANALYSER PRO
-    <p>Live market data | Technical analysis development</p>
-    <p>Read-only market monitoring</p>
+    Deriv Market Analyser | Market data only
 </footer>
 
 <script>
 
 const WS_URL =
-"wss://api.derivws.com/trading/v1/options/ws/public";
-
-let socket;
-let markets = [];
-let selectedSymbol = "";
-let previousPrice = null;
-let reconnectDelay = 2000;
-let reconnectTimer;
-let pingTimer;
-let requestId = 0;
+    "wss://api.derivws.com/trading/v1/options/ws/public";
 
 const statusBox = document.getElementById("status");
+
 const selector = document.getElementById("market-select");
+
+const marketList = document.getElementById("market-list");
+
+const marketCount = document.getElementById("market-count");
+
+const connectionInfo =
+    document.getElementById("connection-info");
+
+let socket = null;
+
+let markets = [];
+
+let selectedSymbol = "";
+
+let previousPrice = null;
+
+let requestId = 0;
+
+let reconnectTimer = null;
+
+let reconnectDelay = 2000;
+
+let manuallyClosed = false;
+
+
+// Send a request to Deriv
 
 function sendRequest(data) {
 
-    if (socket && socket.readyState === WebSocket.OPEN) {
+    if (
+        socket &&
+        socket.readyState === WebSocket.OPEN
+    ) {
+
         socket.send(JSON.stringify({
             ...data,
             req_id: ++requestId
         }));
+
     }
 
 }
 
-function connect() {
 
-    clearTimeout(reconnectTimer);
+// Identify synthetic indices
 
-    statusBox.innerText = "Connecting to Deriv...";
+function isSynthetic(market) {
 
-    socket = new WebSocket(WS_URL);
+    const category = [
+        market.market,
+        market.market_display_name,
+        market.submarket,
+        market.submarket_display_name,
+        market.display_name
+    ].join(" ").toLowerCase();
 
-    socket.onopen = function() {
-
-        statusBox.innerText = "Connected - Discovering markets";
-
-        reconnectDelay = 2000;
-
-        sendRequest({
-            active_symbols: "full"
-        });
-
-        clearInterval(pingTimer);
-
-        pingTimer = setInterval(function() {
-            sendRequest({ping: 1});
-        }, 30000);
-
-    };
-
-    socket.onmessage = function(event) {
-
-    const data = JSON.parse(event.data);
-
-    document.getElementById("market-list").innerHTML = `
-        <h3>Deriv API Response</h3>
-        <pre style="
-            white-space:pre-wrap;
-            overflow-wrap:anywhere;
-            font-size:12px;
-            color:#00d9a5;
-        ">${JSON.stringify(data, null, 2)}</pre>
-    `;
-
-    document.getElementById("market-count").innerText =
-        "Response: " + (data.msg_type || "Unknown");
-
-    if (data.error) {
-        statusBox.innerText =
-            "API Error: " + data.error.message;
-    } else {
-        statusBox.innerText =
-            "Connected - Response received";
-    }
-
-};
-
-    socket.onerror = function() {
-        statusBox.innerText = "Connection error";
-    };
-
-    socket.onclose = function() {
-
-        clearInterval(pingTimer);
-
-        statusBox.innerText =
-            "Disconnected - Reconnecting...";
-
-        reconnectTimer = setTimeout(function() {
-
-            connect();
-
-        }, reconnectDelay);
-
-        reconnectDelay = Math.min(
-            reconnectDelay * 2,
-            30000
-        );
-
-    };
+    return (
+        category.includes("synthetic") ||
+        category.includes("volatility") ||
+        category.includes("boom") ||
+        category.includes("crash") ||
+        category.includes("step") ||
+        category.includes("range break") ||
+        category.includes("jump")
+    );
 
 }
+
+
+// Display markets
 
 function renderMarkets() {
 
-    const list = document.getElementById("market-list");
-
-    const search = document.getElementById("search")
+    const search =
+        document.getElementById("search")
         .value.toLowerCase();
 
     const filtered = markets.filter(market => {
 
-        const name = market.underlying_symbol_name || "";
-        const symbol = market.underlying_symbol || "";
+        const name =
+            market.display_name ||
+            market.underlying_symbol_name ||
+            market.symbol;
 
-        return (
-            name.toLowerCase().includes(search) ||
-            symbol.toLowerCase().includes(search)
-        );
-
-    });
-
-    list.innerHTML = "";
-
-    selector.innerHTML = "";
-
-    filtered.forEach(market => {
-
-        const name = market.underlying_symbol_name;
-        const symbol = market.underlying_symbol;
-
-        const item = document.createElement("div");
-
-        item.className = "market-item";
-
-        item.innerHTML = `
-            <strong>${name}</strong>
-            <div class="small">${symbol}</div>
-        `;
-
-        list.appendChild(item);
-
-        const option = document.createElement("option");
-
-        option.value = symbol;
-        option.textContent = name;
-
-        selector.appendChild(option);
+        return name.toLowerCase().includes(search);
 
     });
 
-    if (filtered.length > 0) {
+    marketList.innerHTML = "";
 
-        if (!filtered.some(m =>
-            m.underlying_symbol === selectedSymbol
-        )) {
-            selectedSymbol =
-                filtered[0].underlying_symbol;
-        }
+    if (filtered.length === 0) {
 
-        selector.value = selectedSymbol;
+        marketList.innerText =
+            "No matching synthetic markets found.";
 
-        subscribeMarket(selectedSymbol);
-
-    } else {
-
-        selector.innerHTML =
-            '<option value="">No matching markets</option>';
+        return;
 
     }
 
-}
-
-    });
-
-    list.innerHTML = "";
-
     filtered.forEach(market => {
 
         const item = document.createElement("div");
 
         item.className = "market-item";
 
-        item.innerHTML = `
-            <strong>${market.display_name}</strong>
-            <div class="small">${market.symbol}</div>
-        `;
+        item.textContent =
+            market.display_name || market.symbol;
 
-        list.appendChild(item);
+        item.onclick = function() {
+
+            selector.value = market.symbol;
+
+            subscribeMarket(market.symbol);
+
+        };
+
+        marketList.appendChild(item);
 
     });
 
+}
+
+
+// Populate the selection box
+
+function populateMarkets() {
+
     selector.innerHTML = "";
 
-    filtered.forEach(market => {
+    markets.forEach(market => {
 
         const option = document.createElement("option");
 
         option.value = market.symbol;
-        option.textContent = market.display_name;
+
+        option.textContent =
+            market.display_name || market.symbol;
 
         selector.appendChild(option);
 
     });
 
-    if (filtered.length > 0) {
+    if (markets.length > 0) {
 
-        if (
-            !filtered.some(m => m.symbol === selectedSymbol)
-        ) {
-            selectedSymbol = filtered[0].symbol;
-        }
+        selector.value = markets[0].symbol;
 
-        selector.value = selectedSymbol;
-
-        subscribeMarket(selectedSymbol);
-
-    } else {
-
-        selector.innerHTML =
-            '<option value="">No matching markets</option>';
+        subscribeMarket(markets[0].symbol);
 
     }
 
+    renderMarkets();
+
 }
+
+
+// Subscribe to a selected market
 
 function subscribeMarket(symbol) {
 
@@ -401,14 +356,237 @@ function subscribeMarket(symbol) {
 
 }
 
+
+// Handle market selection
+
 selector.addEventListener("change", function() {
 
     subscribeMarket(this.value);
 
 });
 
+
+// Handle search
+
 document.getElementById("search")
 .addEventListener("input", renderMarkets);
+
+
+// Establish connection
+
+function connect() {
+
+    clearTimeout(reconnectTimer);
+
+    statusBox.innerText = "Connecting to Deriv...";
+
+    connectionInfo.innerText =
+        "Opening public market-data connection.";
+
+    try {
+
+        socket = new WebSocket(WS_URL);
+
+    } catch (error) {
+
+        statusBox.innerText =
+            "Connection could not start.";
+
+        connectionInfo.innerText = error.message;
+
+        return;
+
+    }
+
+
+    // Successful connection
+
+    socket.onopen = function() {
+
+        statusBox.innerText =
+            "Connected - Discovering markets";
+
+        connectionInfo.innerText =
+            "WebSocket connection established.";
+
+        reconnectDelay = 2000;
+
+        sendRequest({
+            active_symbols: "full"
+        });
+
+    };
+
+
+    // Receive Deriv responses
+
+    socket.onmessage = function(event) {
+
+        let data;
+
+        try {
+
+            data = JSON.parse(event.data);
+
+        } catch (error) {
+
+            connectionInfo.innerText =
+                "Could not read Deriv response.";
+
+            return;
+
+        }
+
+
+        // Display API errors
+
+        if (data.error) {
+
+            statusBox.innerText =
+                "API Error: " + data.error.message;
+
+            connectionInfo.innerText =
+                JSON.stringify(data.error);
+
+            return;
+
+        }
+
+
+        // Receive available markets
+
+        if (
+            data.msg_type === "active_symbols" ||
+            data.active_symbols
+        ) {
+
+            const allMarkets = data.active_symbols || [];
+
+            markets = allMarkets.filter(isSynthetic);
+
+            marketCount.innerText =
+                markets.length +
+                " synthetic markets discovered";
+
+            connectionInfo.innerText =
+                "Received " + allMarkets.length +
+                " total active markets.";
+
+            if (markets.length > 0) {
+
+                statusBox.innerText =
+                    "Connected - Markets loaded";
+
+                populateMarkets();
+
+            } else {
+
+                statusBox.innerText =
+                    "Connected - No synthetic markets identified";
+
+                marketList.innerHTML = `
+                    <h3>API Response Diagnostic</h3>
+                    <pre></pre>
+                `;
+
+                marketList.querySelector("pre").textContent =
+                    JSON.stringify({
+                        message_type: data.msg_type,
+                        response_fields: Object.keys(data),
+                        market_count: allMarkets.length,
+                        sample_markets: allMarkets.slice(0, 5)
+                    }, null, 2);
+
+            }
+
+        }
+
+
+        // Receive live prices
+
+        if (data.msg_type === "tick" && data.tick) {
+
+            if (data.tick.symbol === selectedSymbol) {
+
+                const quote = Number(data.tick.quote);
+
+                document.getElementById("price").innerText =
+                    quote;
+
+                let movement = "First price received";
+
+                if (previousPrice !== null) {
+
+                    if (quote > previousPrice) {
+
+                        movement = "Price moving UP ↑";
+
+                    } else if (quote < previousPrice) {
+
+                        movement = "Price moving DOWN ↓";
+
+                    } else {
+
+                        movement = "Price unchanged";
+
+                    }
+
+                }
+
+                document.getElementById("movement").innerText =
+                    movement;
+
+                previousPrice = quote;
+
+            }
+
+        }
+
+    };
+
+
+    // Connection error
+
+    socket.onerror = function() {
+
+        statusBox.innerText =
+            "Connection error";
+
+        connectionInfo.innerText =
+            "The browser reported a WebSocket error.";
+
+    };
+
+
+    // Connection closed
+
+    socket.onclose = function(event) {
+
+        if (manuallyClosed) return;
+
+        statusBox.innerText =
+            "Disconnected - Reconnecting...";
+
+        connectionInfo.innerText =
+            "Connection closed. Code: " + event.code;
+
+        reconnectTimer = setTimeout(function() {
+
+            connect();
+
+        }, reconnectDelay);
+
+        reconnectDelay = Math.min(
+            reconnectDelay * 2,
+            30000
+        );
+
+    };
+
+}
+
+
+// Start the analyser
 
 connect();
 
