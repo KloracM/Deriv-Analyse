@@ -142,6 +142,43 @@ footer {
     <h2>Live Candlestick Chart</h2>
     <div id="chart" style="width: 100%; height: 350px;"></div>
 </div>
+    <div class="card" id="digit-scanner">
+    <h2>🤖 AI Digit Scanner</h2><p>Analyse the latest market digits and identify statistical patterns.</p>
+
+<label for="scan-count">Number of ticks to analyse:</label>
+
+<select id="scan-count">
+    <option value="100">Last 100 ticks</option>
+    <option value="500">Last 500 ticks</option>
+    <option value="1000">Last 1,000 ticks</option>
+</select>
+
+<button id="run-scan" type="button">RUN SCAN</button>
+
+<div id="scanner-status">
+    Ready to scan.
+</div>
+
+<h3>Digit Frequency (0–9)</h3>
+<div id="digit-results">
+    Waiting for scan...
+</div>
+
+<h3>Market Statistics</h3>
+<div id="digit-statistics">
+    No analysis available yet.
+</div>
+
+<h3>Scanner Insights</h3>
+<div id="digit-insights">
+    Run a scan to see statistical insights.
+</div>
+
+<p style="font-size:12px;">
+    Note: Historical digit patterns do not guarantee future outcomes.
+</p>
+
+</div>
 <div class="card">
     <h2>Selected Market</h2>
 
@@ -191,6 +228,37 @@ let markets = [];
 let selectedSymbol = "";
 
 let previousPrice = null;
+    let scanRequested = false;
+let scanTicks = [];
+    document.getElementById("run-scan").addEventListener("click", function () {
+
+    if (!selectedSymbol) {
+        document.getElementById("scanner-status").innerText =
+            "Please select a market first.";
+        return;
+    }
+
+    const count = Number(
+        document.getElementById("scan-count").value
+    );
+
+    scanRequested = true;
+
+    document.getElementById("scanner-status").innerText =
+        "Scanning " + selectedSymbol + "...";
+
+    document.getElementById("digit-results").innerHTML =
+        "Analysing market digits...";
+
+    sendRequest({
+    ticks_history: selectedSymbol,
+    count: count,
+    end: "latest",
+    style: "ticks",
+    passthrough: {
+        purpose: "digit_scan"
+    }
+});
 
 let requestId = 0;
 
@@ -417,8 +485,7 @@ sendRequest({
     ticks_history: symbol,
     count: 100,
     end: "latest",
-    style: "ticks",
-    granularity: 60
+    style: "ticks"
 });
 }
 
@@ -573,6 +640,75 @@ if (data.msg_type === "history" && data.history) {
     const prices = data.history.prices;
     const times = data.history.times;
 
+if (
+    scanRequested &&
+    data.echo_req &&
+    data.echo_req.passthrough &&
+    data.echo_req.passthrough.purpose === "digit_scan"
+) {
+    scanRequested = false;
+
+    const digits = Array(10).fill(0);
+
+    prices.forEach(price => {
+        const decimalPlaces = Number(data.pip_size);
+const formattedPrice = Number(price).toFixed(decimalPlaces);
+
+const lastDigit = Number(
+    formattedPrice.replace(".", "").slice(-1)
+);
+
+        if (lastDigit >= 0 && lastDigit <= 9) {
+            digits[lastDigit]++;
+        }
+    });
+
+    const total = digits.reduce((a, b) => a + b, 0);
+
+    let resultsHTML = "";
+
+    digits.forEach((count, digit) => {
+        const percentage = total
+            ? ((count / total) * 100).toFixed(2)
+            : "0.00";
+
+        resultsHTML += `
+            <p>
+                Digit ${digit}: ${count} times
+                (${percentage}%)
+            </p>
+        `;
+    });
+
+    document.getElementById("digit-results").innerHTML =
+        resultsHTML;
+
+    const even = digits[0] + digits[2] + digits[4] +
+                 digits[6] + digits[8];
+
+    const odd = digits[1] + digits[3] + digits[5] +
+                digits[7] + digits[9];
+
+    const over = digits[5] + digits[6] + digits[7] +
+                 digits[8] + digits[9];
+
+    const under = digits[0] + digits[1] + digits[2] +
+                  digits[3] + digits[4];
+
+    document.getElementById("digit-statistics").innerHTML =
+        `Total ticks: ${total}<br>
+         Even digits: ${even}<br>
+         Odd digits: ${odd}<br>
+         Over 4: ${over}<br>
+         Under 5: ${under}`;
+
+    document.getElementById("scanner-status").innerText =
+        "Scan completed successfully.";
+
+    document.getElementById("digit-insights").innerText =
+        "Most frequent digit: " +
+        digits.indexOf(Math.max(...digits));
+}
     const candles = {};
 
     for (let i = 0; i < prices.length; i++) {
