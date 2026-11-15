@@ -200,20 +200,7 @@ function connect() {
 
     socket.onmessage = function(event) {
 
-        const data = JSON.parse(event.data);
-
-        if (data.error) {
-            statusBox.innerText =
-                "API Error: " + data.error.message;
-            return;
-        }
-
-        if (data.msg_type === "active_symbols" || data.active_symbols) {
-
-    const allMarkets = data.active_symbols || [];
-
-    document.getElementById("market-count").innerText =
-        "Markets received: " + allMarkets.length;
+    const data = JSON.parse(event.data);
 
     document.getElementById("market-list").innerHTML = `
         <h3>Deriv API Response</h3>
@@ -222,17 +209,21 @@ function connect() {
             overflow-wrap:anywhere;
             font-size:12px;
             color:#00d9a5;
-        ">${JSON.stringify({
-            message_type: data.msg_type,
-            response_fields: Object.keys(data),
-            sample_markets: allMarkets.slice(0, 5)
-        }, null, 2)}</pre>
+        ">${JSON.stringify(data, null, 2)}</pre>
     `;
 
-    statusBox.innerText =
-        "Market response received";
+    document.getElementById("market-count").innerText =
+        "Response: " + (data.msg_type || "Unknown");
 
-}
+    if (data.error) {
+        statusBox.innerText =
+            "API Error: " + data.error.message;
+    } else {
+        statusBox.innerText =
+            "Connected - Response received";
+    }
+
+};
 
 markets.sort((a, b) =>
     (a.underlying_symbol_name || a.underlying_symbol)
