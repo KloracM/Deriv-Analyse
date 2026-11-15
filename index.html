@@ -113,6 +113,33 @@ footer {
     padding: 15px;
     font-size: 12px;
 }
+    <style>
+.contract-slider {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding: 12px 5px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+.contract-slider .card {
+    flex: 0 0 85%;
+    min-width: 85%;
+    scroll-snap-align: start;
+}
+
+.contract-slider button {
+    min-width: 100px;
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+.contract-slider::-webkit-scrollbar {
+    display: none;
+}
 </style>
 </head>
 
@@ -159,26 +186,14 @@ footer {
 <hr>
 
 <h3>🎯 Contract Selection</h3>
-
+<div class="contract-slider">
 <div class="card">
     <h3>Matches / Differs</h3>
 
     <button type="button" id="matches-btn">MATCHES</button>
     <button type="button" id="differs-btn">DIFFERS</button>
 
-    <label>Select digit:</label>
-    <select id="contract-digit">
-        <option value="0">Digit 0</option>
-        <option value="1">Digit 1</option>
-        <option value="2">Digit 2</option>
-        <option value="3">Digit 3</option>
-        <option value="4">Digit 4</option>
-        <option value="5" selected>Digit 5</option>
-        <option value="6">Digit 6</option>
-        <option value="7">Digit 7</option>
-        <option value="8">Digit 8</option>
-        <option value="9">Digit 9</option>
-    </select>
+   
 </div>
 <div class="card">
     <h3>📊 Selected Contract Analysis</h3>
@@ -337,9 +352,6 @@ document.getElementById("over-btn").onclick =
 document.getElementById("under-btn").onclick =
     () => selectContract("under");
 
-document.getElementById("contract-digit").addEventListener("change", function() {
-    selectedDigit = Number(this.value);
-});
 
 document.getElementById("contract-barrier").addEventListener("change", function() {
     selectedBarrier = Number(this.value);
@@ -842,7 +854,7 @@ previousDigitPercentages = currentPercentages;
 const percentage = (value) =>
     total ? ((value / total) * 100).toFixed(2) : "0.00";
 
-const matchesCount = digits[selectedDigit];
+const matchesCount = digits[highestDigit];
 const differsCount = total - matchesCount;
 
 const overCount = digits.reduce(
@@ -870,7 +882,7 @@ document.getElementById("contract-analysis").innerHTML = `
 
     <div class="card">
         <h3>MATCHES / DIFFERS</h3>
-        <p>Matches digit ${selectedDigit}: 
+        <p> Matches digit ${highestDigit}
         ${percentage(matchesCount)}%</p>
         <p>Differs: ${percentage(differsCount)}%</p>
     </div>
