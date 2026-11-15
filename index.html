@@ -195,8 +195,41 @@ let reconnectTimer = null;
 let reconnectDelay = 2000;
 
 let manuallyClosed = false;
+    
+// Create the candlestick chart
+const chartContainer = document.getElementById("chart");
 
+const chart = LightweightCharts.createChart(chartContainer, {
+    width: chartContainer.clientWidth,
+    height: 350,
+    layout: {
+        background: {
+            color: "#172631"
+        },
+        textColor: "#ffffff"
+    },
+    grid: {
+        vertLines: {
+            color: "#263746"
+        },
+        horzLines: {
+            color: "#263746"
+        }
+    },
+    timeScale: {
+        timeVisible: true,
+        secondsVisible: false
+    }
+});
 
+const candleSeries = chart.addCandlestickSeries();
+
+let currentCandle = null;
+window.addEventListener("resize", () => {
+    chart.applyOptions({
+        width: chartContainer.clientWidth
+    });
+});
 // Send a request to Deriv
 
 function sendRequest(data) {
@@ -376,7 +409,13 @@ function subscribeMarket(symbol) {
         ticks: symbol,
         subscribe: 1
     });
-
+sendRequest({
+    ticks_history: symbol,
+    count: 100,
+    end: "latest",
+    style: "ticks",
+    granularity: 60
+});
 }
 
 
@@ -524,7 +563,42 @@ function connect() {
 
         }
 
+// Convert historical ticks into 1-minute candles
+if (data.msg_type === "history" && data.history) {
 
+    const prices = data.history.prices;
+    const times = data.history.times;
+
+    const candles = {};
+
+    for (let i = 0; i < prices.length; i++) {
+
+        const time = Math.floor(times[i] / 60) * 60;
+        const price = Number(prices[i]);
+
+        if (!candles[time]) {
+            candles[time] = {
+                time: time,
+                open: price,
+                high: price,
+                low: price,
+                close: price
+            };
+        } else {
+            candles[time].high = Math.max(candles[time].high, price);
+            candles[time].low = Math.min(candles[time].low, price);
+            candles[time].close = price;
+        }
+    }
+
+    const candleData = Object.values(candles);
+
+    candleSeries.setData(candleData);
+
+    currentCandle = candleData.length
+        ? candleData[candleData.length - 1]
+        : null;
+}
         // Receive live prices
 
         if (data.msg_type === "tick" && data.tick) {
@@ -532,7 +606,28 @@ function connect() {
             if (data.tick.symbol === selectedSymbol) {
 
                 const quote = Number(data.tick.quote);
+const tickTime = Math.floor(data.tick.epoch / 60) * 60;
 
+if (!currentCandle || tickTime > currentCandle.time) {
+
+    currentCandle = {
+        time: tickTime,
+        open: quote,
+        high: quote,
+        low: quote,
+        close: quote
+    };
+
+    candleSeries.update(currentCandle);
+
+} else if (tickTime === currentCandle.time) {
+
+    currentCandle.high = Math.max(currentCandle.high, quote);
+    currentCandle.low = Math.min(currentCandle.low, quote);
+    currentCandle.close = quote;
+
+    candleSeries.update(currentCandle);
+}
                 document.getElementById("price").innerText =
                     quote;
 
