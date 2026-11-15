@@ -3,79 +3,82 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Deriv Analyser</title>
+<title>Deriv Analyser Pro</title>
 
 <style>
-* {
-    box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
     margin: 0;
     padding: 15px;
-    background: #0b1220;
+    background: #09111f;
     color: white;
     font-family: Arial, sans-serif;
 }
 
 header {
-    text-align: center;
-    padding: 20px 10px;
     background: #17243a;
+    padding: 20px;
+    text-align: center;
     border-radius: 12px;
 }
 
-h1 {
-    color: #00d9a5;
+h1 { color: #00d9a5; }
+
+.card {
+    background: #17243a;
+    padding: 16px;
+    margin: 15px 0;
+    border-radius: 10px;
 }
 
 .status {
-    padding: 12px;
-    background: #17243a;
-    margin: 15px 0;
-    border-radius: 8px;
-    text-align: center;
+    color: #00d9a5;
+    font-weight: bold;
 }
 
-.market {
-    background: #17243a;
-    padding: 18px;
-    margin-bottom: 12px;
-    border-radius: 10px;
-    border-left: 4px solid #00d9a5;
-}
-
-.market h3 {
-    margin: 0 0 12px;
+select, input {
+    width: 100%;
+    padding: 13px;
+    margin-top: 10px;
+    background: #09111f;
+    color: white;
+    border: 1px solid #33445e;
+    border-radius: 7px;
 }
 
 .price {
-    font-size: 24px;
-    font-weight: bold;
+    font-size: 30px;
     color: #00d9a5;
+    font-weight: bold;
+    margin-top: 15px;
 }
 
-.change {
-    font-size: 13px;
-    color: #aaa;
-    margin-top: 8px;
+.market-item {
+    padding: 12px;
+    border-bottom: 1px solid #33445e;
 }
 
 button {
     background: #00d9a5;
-    color: #06131b;
-    padding: 12px 20px;
+    color: #09111f;
     border: none;
+    padding: 12px;
     border-radius: 7px;
+    margin-top: 10px;
     font-weight: bold;
-    cursor: pointer;
+    width: 100%;
+}
+
+.small {
+    color: #9caec5;
+    font-size: 13px;
 }
 
 footer {
     text-align: center;
-    color: #888;
+    color: #8996a8;
     margin-top: 25px;
-    font-size: 12px;
 }
 </style>
 </head>
@@ -83,87 +86,115 @@ footer {
 <body>
 
 <header>
-    <h1>DERIV ANALYSER</h1>
-    <p>Live Synthetic Indices Market Dashboard</p>
+    <h1>DERIV ANALYSER PRO</h1>
+    <p>Advanced Synthetic Market Monitor</p>
 </header>
 
-<div class="status" id="status">
-    Connecting to Deriv...
+<div class="card">
+    <h3>Connection Status</h3>
+    <div class="status" id="status">
+        Connecting to Deriv...
+    </div>
 </div>
 
-<div id="markets"></div>
+<div class="card">
+    <h3>Market Discovery</h3>
+
+    <p class="small" id="market-count">
+        Discovering available markets...
+    </p>
+
+    <input
+        type="text"
+        id="search"
+        placeholder="Search synthetic markets..."
+    >
+
+    <select id="market-select">
+        <option value="">Waiting for markets...</option>
+    </select>
+</div>
+
+<div class="card">
+    <h3>Selected Market</h3>
+
+    <div id="selected-name">
+        No market selected
+    </div>
+
+    <div class="price" id="price">
+        ---
+    </div>
+
+    <p id="movement" class="small">
+        Waiting for live prices...
+    </p>
+</div>
+
+<div class="card">
+    <h3>Available Synthetic Markets</h3>
+    <div id="market-list">
+        Loading markets...
+    </div>
+</div>
 
 <footer>
-    DERIV ANALYSER | LIVE MARKET DATA
-    <p>Market analysis only. No automatic trading.</p>
+    DERIV ANALYSER PRO
+    <p>Live market data | Technical analysis development</p>
+    <p>Read-only market monitoring</p>
 </footer>
 
 <script>
 
-const APP_ID = 1089;
-
-const symbols = [
-    {name: "Volatility 10", symbol: "R_10"},
-    {name: "Volatility 25", symbol: "R_25"},
-    {name: "Volatility 50", symbol: "R_50"},
-    {name: "Volatility 75", symbol: "R_75"},
-    {name: "Volatility 100", symbol: "R_100"}
-];
-
-const prices = {};
-
-const marketsContainer = document.getElementById("markets");
-
-symbols.forEach(market => {
-
-    prices[market.symbol] = {
-        current: null,
-        previous: null
-    };
-
-    marketsContainer.innerHTML += `
-        <div class="market">
-            <h3>${market.name}</h3>
-
-            <div class="price" id="price-${market.symbol}">
-                Waiting for price...
-            </div>
-
-            <div class="change" id="change-${market.symbol}">
-                Awaiting market data
-            </div>
-        </div>
-    `;
-
-});
+const WS_URL =
+"wss://api.derivws.com/trading/v1/options/ws/public";
 
 let socket;
+let markets = [];
+let selectedSymbol = "";
+let previousPrice = null;
+let reconnectDelay = 2000;
 let reconnectTimer;
+let pingTimer;
+let requestId = 0;
 
-function connectDeriv() {
+const statusBox = document.getElementById("status");
+const selector = document.getElementById("market-select");
+
+function sendRequest(data) {
+
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+            ...data,
+            req_id: ++requestId
+        }));
+    }
+
+}
+
+function connect() {
 
     clearTimeout(reconnectTimer);
 
-    document.getElementById("status").innerText =
-        "Connecting to Deriv...";
+    statusBox.innerText = "Connecting to Deriv...";
 
-    socket = new WebSocket(
-    "wss://api.derivws.com/trading/v1/options/ws/public"
-);
+    socket = new WebSocket(WS_URL);
 
     socket.onopen = function() {
 
-        document.getElementById("status").innerText =
-            "Connected - Receiving live prices";
+        statusBox.innerText = "Connected - Discovering markets";
 
-        symbols.forEach(market => {
+        reconnectDelay = 2000;
 
-            socket.send(JSON.stringify({
-                ticks: market.symbol,
-                subscribe: 1
-            }));
-
+        sendRequest({
+            active_symbols: "full"
         });
+
+        clearInterval(pingTimer);
+
+        pingTimer = setInterval(function() {
+            sendRequest({ping: 1});
+        }, 30000);
 
     };
 
@@ -172,74 +203,211 @@ function connectDeriv() {
         const data = JSON.parse(event.data);
 
         if (data.error) {
-
-            document.getElementById("status").innerText =
+            statusBox.innerText =
                 "API Error: " + data.error.message;
-
             return;
         }
 
-        if (data.tick) {
+        if (data.msg_type === "active_symbols") {
 
-            const symbol = data.tick.symbol;
-            const quote = data.tick.quote;
+            const allMarkets = data.active_symbols || [];
 
-            const record = prices[symbol];
+            markets = allMarkets.filter(market => {
 
-            record.previous = record.current;
-            record.current = quote;
+                return market.market === "synthetic_index";
 
-            document.getElementById(
-                "price-" + symbol
-            ).innerText = quote;
+            });
 
-            let movement = "Waiting for next tick";
-
-            if (record.previous !== null) {
-
-                if (quote > record.previous) {
-                    movement = "Price moving UP";
-                }
-
-                else if (quote < record.previous) {
-                    movement = "Price moving DOWN";
-                }
-
-                else {
-                    movement = "Price unchanged";
-                }
-
+            // Fallback for changes in market classification.
+            if (markets.length === 0) {
+                markets = allMarkets.filter(market =>
+                    (market.market_display_name || "")
+                    .toLowerCase()
+                    .includes("synthetic")
+                );
             }
 
-            document.getElementById(
-                "change-" + symbol
-            ).innerText = movement;
+            markets.sort((a, b) =>
+                a.display_name.localeCompare(b.display_name)
+            );
+
+            document.getElementById("market-count").innerText =
+                markets.length + " synthetic markets discovered";
+
+            renderMarkets();
+
+            statusBox.innerText =
+                "Connected - Market discovery complete";
+
+        }
+
+        if (data.msg_type === "tick") {
+
+            if (data.tick.symbol === selectedSymbol) {
+
+                const quote = data.tick.quote;
+
+                document.getElementById("price").innerText =
+                    quote;
+
+                document.getElementById("selected-name").innerText =
+                    data.tick.symbol;
+
+                let movement = "First price received";
+
+                if (previousPrice !== null) {
+
+                    if (quote > previousPrice) {
+                        movement = "Price moving UP ↑";
+                    } else if (quote < previousPrice) {
+                        movement = "Price moving DOWN ↓";
+                    } else {
+                        movement = "Price unchanged";
+                    }
+
+                }
+
+                document.getElementById("movement").innerText =
+                    movement;
+
+                previousPrice = quote;
+
+            }
 
         }
 
     };
 
     socket.onerror = function() {
+        statusBox.innerText = "Connection error";
+    };
 
-        document.getElementById("status").innerText =
-            "Connection error";
+    socket.onclose = function() {
+
+        clearInterval(pingTimer);
+
+        statusBox.innerText =
+            "Disconnected - Reconnecting...";
+
+        reconnectTimer = setTimeout(function() {
+
+            connect();
+
+        }, reconnectDelay);
+
+        reconnectDelay = Math.min(
+            reconnectDelay * 2,
+            30000
+        );
 
     };
 
-    socket.onclose = function(event) {
-
-    document.getElementById("status").innerText =
-        "Disconnected. Code: " + event.code +
-        " Reason: " + (event.reason || "Not provided");
-
-    console.log("Close code:", event.code);
-    console.log("Close reason:", event.reason);
-    console.log("Was clean:", event.wasClean);
-
-};
 }
 
-connectDeriv();
+function renderMarkets() {
+
+    const list = document.getElementById("market-list");
+
+    const search = document.getElementById("search")
+        .value.toLowerCase();
+
+    const filtered = markets.filter(market => {
+
+        return (
+            market.display_name.toLowerCase().includes(search) ||
+            market.symbol.toLowerCase().includes(search)
+        );
+
+    });
+
+    list.innerHTML = "";
+
+    filtered.forEach(market => {
+
+        const item = document.createElement("div");
+
+        item.className = "market-item";
+
+        item.innerHTML = `
+            <strong>${market.display_name}</strong>
+            <div class="small">${market.symbol}</div>
+        `;
+
+        list.appendChild(item);
+
+    });
+
+    selector.innerHTML = "";
+
+    filtered.forEach(market => {
+
+        const option = document.createElement("option");
+
+        option.value = market.symbol;
+        option.textContent = market.display_name;
+
+        selector.appendChild(option);
+
+    });
+
+    if (filtered.length > 0) {
+
+        if (
+            !filtered.some(m => m.symbol === selectedSymbol)
+        ) {
+            selectedSymbol = filtered[0].symbol;
+        }
+
+        selector.value = selectedSymbol;
+
+        subscribeMarket(selectedSymbol);
+
+    } else {
+
+        selector.innerHTML =
+            '<option value="">No matching markets</option>';
+
+    }
+
+}
+
+function subscribeMarket(symbol) {
+
+    if (!symbol) return;
+
+    selectedSymbol = symbol;
+
+    previousPrice = null;
+
+    document.getElementById("price").innerText = "---";
+
+    document.getElementById("selected-name").innerText =
+        symbol;
+
+    document.getElementById("movement").innerText =
+        "Waiting for live prices...";
+
+    sendRequest({
+        forget_all: "ticks"
+    });
+
+    sendRequest({
+        ticks: symbol,
+        subscribe: 1
+    });
+
+}
+
+selector.addEventListener("change", function() {
+
+    subscribeMarket(this.value);
+
+});
+
+document.getElementById("search")
+.addEventListener("input", renderMarkets);
+
+connect();
 
 </script>
 
