@@ -265,6 +265,7 @@ setTimeout(connect,5000);
 };
 }
 
+if(!lastCandle || time>lastCandle.time){
 function changeMarket(){
 
 if(!symbols.length)return;
@@ -276,15 +277,14 @@ document.getElementById("timeframe").value
 
 const wanted="Volatility "+selected+" Index";
 
-const matches=symbols.filter(s=>
-s.display_name &&
-s.display_name.toLowerCase()===wanted.toLowerCase()
+const market=symbols.find(s=>
+(s.underlying_symbol_name || s.display_name || "")
+.toLowerCase()===wanted.toLowerCase()
 );
-
-const market=matches[0];
 
 if(!market){
 connection.textContent="Market not found: "+wanted;
+console.log("Available markets:",symbols);
 return;
 }
 
@@ -292,17 +292,16 @@ if(ws && ws.readyState===WebSocket.OPEN){
 send({forget_all:"ticks"});
 }
 
-currentSymbol=market.symbol;
+currentSymbol=market.underlying_symbol || market.symbol;
 
-document.getElementById("marketName").textContent=
-market.display_name;
+document.getElementById("marketName").textContent=wanted;
 
 candleData=[];
 lastCandle=null;
 
 candles.setData([]);
 
-connection.textContent="Loading "+market.display_name+"...";
+connection.textContent="Loading "+wanted+"...";
 
 send({
 ticks_history:currentSymbol,
@@ -319,15 +318,6 @@ subscribe:1,
 req_id:3
 });
 }
-
-function updateCandle(price,epoch){
-
-if(!currentSymbol)return;
-
-const time=Math.floor(epoch/granularity)*granularity;
-
-if(!lastCandle || time>lastCandle.time){
-
 lastCandle={
 time:time,
 open:price,
