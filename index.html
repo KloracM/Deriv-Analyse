@@ -153,9 +153,8 @@ footer {
     <option value="1000">Last 1,000 ticks</option>
 </select>
 
-<button id="run-scan" type="button"
-onclick="document.getElementById('scanner-status').innerText='Button click detected!';">
-RUN SCAN
+<button id="run-scan" type="button" onclick="runDigitScan()">
+    RUN SCAN
 </button>
 
 <div id="scanner-status">
@@ -233,7 +232,8 @@ let selectedSymbol = "";
 let previousPrice = null;
     let scanRequested = false;
 let scanTicks = [];
-    document.getElementById("run-scan").addEventListener("click", function () {
+
+function runDigitScan() {
 
     if (!selectedSymbol) {
         document.getElementById("scanner-status").innerText =
@@ -254,15 +254,17 @@ let scanTicks = [];
         "Analysing market digits...";
 
     sendRequest({
-    ticks_history: selectedSymbol,
-    count: count,
-    end: "latest",
-    style: "ticks",
-    passthrough: {
-        purpose: "digit_scan"
-    }
-});
-});
+        ticks_history: selectedSymbol,
+        count: count,
+        end: "latest",
+        style: "ticks",
+        passthrough: {
+            purpose: "digit_scan"
+        }
+    });
+}
+
+let requestId = 0;
 let requestId = 0;
 
 let reconnectTimer = null;
