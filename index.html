@@ -156,7 +156,62 @@ footer {
 <button id="run-scan" type="button" onclick="runDigitScan()">
     RUN SCAN
 </button>
+<hr>
 
+<h3>🎯 Contract Selection</h3>
+
+<div class="card">
+    <h3>Matches / Differs</h3>
+
+    <button type="button" id="matches-btn">MATCHES</button>
+    <button type="button" id="differs-btn">DIFFERS</button>
+
+    <label>Select digit:</label>
+    <select id="contract-digit">
+        <option value="0">Digit 0</option>
+        <option value="1">Digit 1</option>
+        <option value="2">Digit 2</option>
+        <option value="3">Digit 3</option>
+        <option value="4">Digit 4</option>
+        <option value="5" selected>Digit 5</option>
+        <option value="6">Digit 6</option>
+        <option value="7">Digit 7</option>
+        <option value="8">Digit 8</option>
+        <option value="9">Digit 9</option>
+    </select>
+</div>
+<div class="card">
+    <h3>📊 Selected Contract Analysis</h3>
+    <div id="contract-analysis">
+        Run a scan to view contract statistics.
+    </div>
+</div>
+<div class="card">
+    <h3>Even / Odd</h3>
+
+    <button type="button" id="even-btn">EVEN</button>
+    <button type="button" id="odd-btn">ODD</button>
+</div>
+
+<div class="card">
+    <h3>Over / Under</h3>
+
+    <button type="button" id="over-btn">OVER</button>
+    <button type="button" id="under-btn">UNDER</button>
+
+    <label>Select barrier:</label>
+    <select id="contract-barrier">
+        <option value="0">Barrier 0</option>
+        <option value="1">Barrier 1</option>
+        <option value="2">Barrier 2</option>
+        <option value="3">Barrier 3</option>
+        <option value="4">Barrier 4</option>
+        <option value="5" selected>Barrier 5</option>
+        <option value="6">Barrier 6</option>
+        <option value="7">Barrier 7</option>
+        <option value="8">Barrier 8</option>
+    </select>
+</div>
 <div id="scanner-status">
     Ready to scan.
 </div>
@@ -232,7 +287,65 @@ let selectedSymbol = "";
 let previousPrice = null;
     let scanRequested = false;
 let scanTicks = [];
+let selectedContract = "matches";
+let selectedDigit = 5;
+let selectedBarrier = 5;
 
+let latestDigitCounts = null;
+let previousDigitPercentages = null;
+    function selectContract(contract) {
+    selectedContract = contract;
+
+    const buttons = [
+        "matches-btn",
+        "differs-btn",
+        "even-btn",
+        "odd-btn",
+        "over-btn",
+        "under-btn"
+    ];
+
+    buttons.forEach(id => {
+        const button = document.getElementById(id);
+        button.style.background = "#263b49";
+        button.style.color = "white";
+    });
+
+    const activeButton = document.getElementById(contract + "-btn");
+    activeButton.style.background = "#00d9a5";
+    activeButton.style.color = "#101820";
+
+    document.getElementById("contract-analysis").innerText =
+        contract.toUpperCase() + " selected. Run a scan to analyse.";
+}
+
+document.getElementById("matches-btn").onclick =
+    () => selectContract("matches");
+
+document.getElementById("differs-btn").onclick =
+    () => selectContract("differs");
+
+document.getElementById("even-btn").onclick =
+    () => selectContract("even");
+
+document.getElementById("odd-btn").onclick =
+    () => selectContract("odd");
+
+document.getElementById("over-btn").onclick =
+    () => selectContract("over");
+
+document.getElementById("under-btn").onclick =
+    () => selectContract("under");
+
+document.getElementById("contract-digit").addEventListener("change", function() {
+    selectedDigit = Number(this.value);
+});
+
+document.getElementById("contract-barrier").addEventListener("change", function() {
+    selectedBarrier = Number(this.value);
+});
+
+selectContract("matches");
 function runDigitScan() {
 
     if (!selectedSymbol) {
@@ -671,18 +784,44 @@ const lastDigit = Number(
 
     let resultsHTML = "";
 
-    digits.forEach((count, digit) => {
-        const percentage = total
-            ? ((count / total) * 100).toFixed(2)
-            : "0.00";
+    const currentPercentages = [];
 
-        resultsHTML += `
-            <p>
-                Digit ${digit}: ${count} times
-                (${percentage}%)
-            </p>
-        `;
-    });
+const highestDigit = digits.indexOf(Math.max(...digits));
+
+digits.forEach((count, digit) => {
+
+    const currentPercentage = total
+        ? (count / total) * 100
+        : 0;
+
+    currentPercentages[digit] = currentPercentage;
+
+    let arrow = "➡️";
+    let movement = "No change";
+
+    if (previousDigitPercentages !== null) {
+
+        if (currentPercentage > previousDigitPercentages[digit]) {
+            arrow = "🟢 ↑";
+            movement = "Increasing";
+        } else if (currentPercentage < previousDigitPercentages[digit]) {
+            arrow = "🔴 ↓";
+            movement = "Decreasing";
+        }
+    }
+
+    const highlight = digit === highestDigit ? "⭐ " : "";
+
+    resultsHTML += `
+        <p>
+            ${highlight}Digit ${digit}: ${count} times
+            (${currentPercentage.toFixed(2)}%)
+            ${arrow} ${movement}
+        </p>
+    `;
+});
+
+previousDigitPercentages = currentPercentages;
 
     document.getElementById("digit-results").innerHTML =
         resultsHTML;
@@ -698,7 +837,47 @@ const lastDigit = Number(
 
     const under = digits[0] + digits[1] + digits[2] +
                   digits[3] + digits[4];
+// Calculate contract percentages
 
+const percentage = (value) =>
+    total ? ((value / total) * 100).toFixed(2) : "0.00";
+
+const matchesCount = digits[selectedDigit];
+const differsCount = total - matchesCount;
+
+const overCount = digits.reduce(
+    (sum, count, digit) =>
+        sum + (digit > selectedBarrier ? count : 0), 0
+);
+
+const underCount = digits.reduce(
+    (sum, count, digit) =>
+        sum + (digit < selectedBarrier ? count : 0), 0
+);
+
+let selectedCount = 0;
+
+if (selectedContract === "matches") selectedCount = matchesCount;
+if (selectedContract === "differs") selectedCount = differsCount;
+if (selectedContract === "even") selectedCount = even;
+if (selectedContract === "odd") selectedCount = odd;
+if (selectedContract === "over") selectedCount = overCount;
+if (selectedContract === "under") selectedCount = underCount;
+
+document.getElementById("contract-analysis").innerHTML = `
+    <h3>${selectedContract.toUpperCase()}</h3>
+    <p>Matches digit: ${selectedDigit}</p>
+    <p>Barrier: ${selectedBarrier}</p>
+    <h2>${percentage(selectedCount)}%</h2>
+    <p>Historical occurrences: ${selectedCount} out of ${total}</p>
+    <hr>
+    <p>Matches: ${percentage(matchesCount)}%</p>
+    <p>Differs: ${percentage(differsCount)}%</p>
+    <p>Even: ${percentage(even)}%</p>
+    <p>Odd: ${percentage(odd)}%</p>
+    <p>Over ${selectedBarrier}: ${percentage(overCount)}%</p>
+    <p>Under ${selectedBarrier}: ${percentage(underCount)}%</p>
+`;
     document.getElementById("digit-statistics").innerHTML =
         `Total ticks: ${total}<br>
          Even digits: ${even}<br>
