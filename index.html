@@ -148,8 +148,8 @@ function connectDeriv() {
         "Connecting to Deriv...";
 
     socket = new WebSocket(
-        `wss://ws.derivws.com/websockets/v3?app_id=${APP_ID}`
-    );
+    "wss://api.derivws.com/trading/v1/options/ws/public"
+);
 
     socket.onopen = function() {
 
