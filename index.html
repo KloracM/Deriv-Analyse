@@ -222,10 +222,10 @@ function isSynthetic(market) {
 
     const category = [
         market.market,
-        market.market_display_name,
         market.submarket,
-        market.submarket_display_name,
-        market.display_name
+        market.subgroup,
+        market.underlying_symbol_type,
+        market.underlying_symbol_name
     ].join(" ").toLowerCase();
 
     return (
@@ -235,7 +235,8 @@ function isSynthetic(market) {
         category.includes("crash") ||
         category.includes("step") ||
         category.includes("range break") ||
-        category.includes("jump")
+        category.includes("jump") ||
+        category.includes("derived")
     );
 
 }
@@ -252,9 +253,11 @@ function renderMarkets() {
     const filtered = markets.filter(market => {
 
         const name =
-            market.display_name ||
             market.underlying_symbol_name ||
-            market.symbol;
+            market.display_name ||
+            market.symbol ||
+            market.underlying_symbol ||
+            "Unnamed market";
 
         return name.toLowerCase().includes(search);
 
@@ -273,18 +276,28 @@ function renderMarkets() {
 
     filtered.forEach(market => {
 
+        const name =
+            market.underlying_symbol_name ||
+            market.display_name ||
+            market.symbol ||
+            market.underlying_symbol ||
+            "Unnamed market";
+
+        const symbol =
+            market.underlying_symbol ||
+            market.symbol;
+
         const item = document.createElement("div");
 
         item.className = "market-item";
 
-        item.textContent =
-            market.display_name || market.symbol;
+        item.textContent = name;
 
         item.onclick = function() {
 
-            selector.value = market.symbol;
+            selector.value = symbol;
 
-            subscribeMarket(market.symbol);
+            subscribeMarket(symbol);
 
         };
 
@@ -303,22 +316,32 @@ function populateMarkets() {
 
     markets.forEach(market => {
 
+        const symbol =
+            market.underlying_symbol ||
+            market.symbol;
+
+        const name =
+            market.underlying_symbol_name ||
+            market.display_name ||
+            symbol;
+
+        if (!symbol) return;
+
         const option = document.createElement("option");
 
-        option.value = market.symbol;
+        option.value = symbol;
 
-        option.textContent =
-            market.display_name || market.symbol;
+        option.textContent = name;
 
         selector.appendChild(option);
 
     });
 
-    if (markets.length > 0) {
+    if (selector.options.length > 0) {
 
-        selector.value = markets[0].symbol;
+        selector.selectedIndex = 0;
 
-        subscribeMarket(markets[0].symbol);
+        subscribeMarket(selector.value);
 
     }
 
