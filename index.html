@@ -2,435 +2,243 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Deriv Advanced Analyser</title>
-<script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deriv Analyser</title>
 
 <style>
-*{box-sizing:border-box}
-body{
- margin:0;background:#081321;color:white;
- font-family:Arial,sans-serif
+* {
+    box-sizing: border-box;
 }
-header{
- background:#12243a;padding:20px;text-align:center;
- border-bottom:2px solid #00d09c
+
+body {
+    margin: 0;
+    padding: 15px;
+    background: #0b1220;
+    color: white;
+    font-family: Arial, sans-serif;
 }
-header h1{color:#00d09c;margin:0}
-.container{max-width:1100px;margin:auto;padding:15px}
-.card{
- background:#14283f;padding:18px;
- border-radius:12px;margin-bottom:16px
+
+header {
+    text-align: center;
+    padding: 20px 10px;
+    background: #17243a;
+    border-radius: 12px;
 }
-label{display:block;margin:12px 0 7px;color:#b5c5d8}
-select,button{
- width:100%;padding:13px;border-radius:7px;
- border:0;margin-bottom:10px;font-size:15px
+
+h1 {
+    color: #00d9a5;
 }
-select{background:#263d58;color:white}
-button{
- background:#00d09c;color:#071b17;
- font-weight:bold;cursor:pointer
+
+.status {
+    padding: 12px;
+    background: #17243a;
+    margin: 15px 0;
+    border-radius: 8px;
+    text-align: center;
 }
-.grid{
- display:grid;grid-template-columns:repeat(2,1fr);
- gap:10px
+
+.market {
+    background: #17243a;
+    padding: 18px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    border-left: 4px solid #00d9a5;
 }
-.stat{
- background:#203a56;padding:15px;border-radius:9px
+
+.market h3 {
+    margin: 0 0 12px;
 }
-.stat small{color:#b5c5d8}
-.stat h2{color:#00d09c;font-size:20px}
-#chart{height:350px;width:100%}
-.signal{text-align:center;padding:18px}
-#signal{font-size:25px;color:#ffc857}
-.status{color:#ffc857;font-size:13px}
-.footer{text-align:center;padding:20px;color:#8799ad}
+
+.price {
+    font-size: 24px;
+    font-weight: bold;
+    color: #00d9a5;
+}
+
+.change {
+    font-size: 13px;
+    color: #aaa;
+    margin-top: 8px;
+}
+
+button {
+    background: #00d9a5;
+    color: #06131b;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 7px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+footer {
+    text-align: center;
+    color: #888;
+    margin-top: 25px;
+    font-size: 12px;
+}
 </style>
 </head>
 
 <body>
 
 <header>
-<h1>DERIV ADVANCED ANALYSER</h1>
-<p>Live Synthetic Market Analysis</p>
-<div id="connection" class="status">Connecting...</div>
+    <h1>DERIV ANALYSER</h1>
+    <p>Live Synthetic Indices Market Dashboard</p>
 </header>
 
-<div class="container">
-
-<div class="card">
-<h3>Market Settings</h3>
-
-<label>Select Market</label>
-<select id="market">
-<option value="10">Volatility 10 Index</option>
-<option value="25">Volatility 25 Index</option>
-<option value="50">Volatility 50 Index</option>
-<option value="75">Volatility 75 Index</option>
-<option value="100">Volatility 100 Index</option>
-</select>
-
-<label>Timeframe</label>
-<select id="timeframe">
-<option value="60">1 Minute</option>
-<option value="300">5 Minutes</option>
-<option value="900">15 Minutes</option>
-<option value="3600">1 Hour</option>
-</select>
-
-<button onclick="changeMarket()">LOAD MARKET</button>
+<div class="status" id="status">
+    Connecting to Deriv...
 </div>
 
-<div class="card">
-<h3>Live Market Price</h3>
-<div class="grid">
-<div class="stat">
-<small>Current Price</small>
-<h2 id="price">--</h2>
-</div>
-<div class="stat">
-<small>Market</small>
-<h2 id="marketName">Volatility 10</h2>
-</div>
-</div>
-</div>
+<div id="markets"></div>
 
-<div class="card">
-<h3>Live Candlestick Chart</h3>
-<div id="chart"></div>
-</div>
-
-<div class="card">
-<h3>Technical Indicators</h3>
-<div class="grid">
-<div class="stat">
-<small>EMA 20</small>
-<h2 id="ema20">--</h2>
-</div>
-<div class="stat">
-<small>EMA 50</small>
-<h2 id="ema50">--</h2>
-</div>
-<div class="stat">
-<small>RSI 14</small>
-<h2 id="rsi">--</h2>
-</div>
-<div class="stat">
-<small>MACD</small>
-<h2 id="macd">--</h2>
-</div>
-</div>
-</div>
-
-<div class="card">
-<h3>Market Analysis</h3>
-<div class="signal">
-<h2 id="signal">WAIT</h2>
-<p id="explanation">Waiting for live market data...</p>
-</div>
-</div>
-
-<div class="card">
-<h3>Trade Planning</h3>
-<p>Entry Price: <strong id="entry">--</strong></p>
-<p>Stop Loss: <strong id="stop">--</strong></p>
-<p>Take Profit: <strong id="target">--</strong></p>
-<p class="status">Planning estimates only. Confirm risk and contract details before trading.</p>
-</div>
-
-<div class="card">
-<h3>System Information</h3>
-<p>Data Source: Deriv Public API</p>
-<p>Account Connection: Not required</p>
-<p>Trading Execution: Disabled</p>
-<p>Analysis Mode: Live Market Data</p>
-</div>
-
-</div>
-
-<div class="footer">
-DERIV ADVANCED ANALYSER | EDUCATIONAL TOOL
-</div>
+<footer>
+    DERIV ANALYSER | LIVE MARKET DATA
+    <p>Market analysis only. No automatic trading.</p>
+</footer>
 
 <script>
-const connection =
-document.getElementById("connection");
 
-const chart = LightweightCharts.createChart(
-document.getElementById("chart"),{
-width:document.getElementById("chart").clientWidth,
-height:350,
-layout:{
-background:{color:"#14283f"},
-textColor:"#ffffff"
-},
-grid:{
-vertLines:{color:"#263d58"},
-horzLines:{color:"#263d58"}
-},
-timeScale:{timeVisible:true}
+const APP_ID = 1089;
+
+const symbols = [
+    {name: "Volatility 10", symbol: "R_10"},
+    {name: "Volatility 25", symbol: "R_25"},
+    {name: "Volatility 50", symbol: "R_50"},
+    {name: "Volatility 75", symbol: "R_75"},
+    {name: "Volatility 100", symbol: "R_100"}
+];
+
+const prices = {};
+
+const marketsContainer = document.getElementById("markets");
+
+symbols.forEach(market => {
+
+    prices[market.symbol] = {
+        current: null,
+        previous: null
+    };
+
+    marketsContainer.innerHTML += `
+        <div class="market">
+            <h3>${market.name}</h3>
+
+            <div class="price" id="price-${market.symbol}">
+                Waiting for price...
+            </div>
+
+            <div class="change" id="change-${market.symbol}">
+                Awaiting market data
+            </div>
+        </div>
+    `;
+
 });
 
-const candles = chart.addCandlestickSeries({
-upColor:"#00d09c",
-downColor:"#ff5263",
-borderUpColor:"#00d09c",
-borderDownColor:"#ff5263",
-wickUpColor:"#00d09c",
-wickDownColor:"#ff5263"
-});
+let socket;
+let reconnectTimer;
 
-let ws;
-let candleData=[];
-let currentSymbol="";
-let granularity=60;
-let lastCandle=null;
-let symbols=[];
+function connectDeriv() {
 
-function send(data){
-if(ws && ws.readyState===WebSocket.OPEN){
-ws.send(JSON.stringify(data));
-}
-}
+    clearTimeout(reconnectTimer);
 
-function connect(){
-connection.textContent="Connecting to Deriv...";
+    document.getElementById("status").innerText =
+        "Connecting to Deriv...";
 
-ws=new WebSocket(
-"wss://api.derivws.com/trading/v1/options/ws/public"
-);
+    socket = new WebSocket(
+        `wss://ws.derivws.com/websockets/v3?app_id=${APP_ID}`
+    );
 
-ws.onopen=()=>{
-connection.textContent="Connected - Loading markets";
+    socket.onopen = function() {
 
-send({
-active_symbols:"brief",
-req_id:1
-});
-};
+        document.getElementById("status").innerText =
+            "Connected - Receiving live prices";
 
-ws.onmessage=(event)=>{
-const data=JSON.parse(event.data);
+        symbols.forEach(market => {
 
-if(data.error){
-connection.textContent="API: "+data.error.message;
-return;
-}
+            socket.send(JSON.stringify({
+                ticks: market.symbol,
+                subscribe: 1
+            }));
 
-if(data.msg_type==="active_symbols"){
-symbols=data.active_symbols||[];
-changeMarket();
-}
+        });
 
-if(data.msg_type==="history"){
-const history=data.history;
+    };
 
-if(history && history.candles){
-candleData=history.candles.map(c=>({
-time:Number(c.epoch),
-open:Number(c.open),
-high:Number(c.high),
-low:Number(c.low),
-close:Number(c.close)
-}));
+    socket.onmessage = function(event) {
 
-candles.setData(candleData);
-lastCandle=candleData[candleData.length-1];
-updateIndicators();
-chart.timeScale().fitContent();
-}
-}
+        const data = JSON.parse(event.data);
 
-if(data.msg_type==="tick"){
-const tick=data.tick;
-if(!tick)return;
+        if (data.error) {
 
-const price=Number(tick.quote);
-const time=Number(tick.epoch);
+            document.getElementById("status").innerText =
+                "API Error: " + data.error.message;
 
-document.getElementById("price").textContent=price;
+            return;
+        }
 
-updateCandle(price,time);
-}
-};
+        if (data.tick) {
 
-ws.onerror=()=>{
-connection.textContent="Connection error. Check internet.";
-};
+            const symbol = data.tick.symbol;
+            const quote = data.tick.quote;
 
-ws.onclose=()=>{
-connection.textContent="Disconnected. Reconnecting...";
-setTimeout(connect,5000);
-};
-}
+            const record = prices[symbol];
 
-if(!lastCandle || time>lastCandle.time){
-function changeMarket(){
+            record.previous = record.current;
+            record.current = quote;
 
-if(!symbols.length)return;
+            document.getElementById(
+                "price-" + symbol
+            ).innerText = quote;
 
-const selected=document.getElementById("market").value;
-granularity=Number(
-document.getElementById("timeframe").value
-);
+            let movement = "Waiting for next tick";
 
-const wanted="Volatility "+selected+" Index";
+            if (record.previous !== null) {
 
-const market=symbols.find(s=>
-(s.underlying_symbol_name || s.display_name || "")
-.toLowerCase()===wanted.toLowerCase()
-);
+                if (quote > record.previous) {
+                    movement = "Price moving UP";
+                }
 
-if(!market){
-connection.textContent="Market not found: "+wanted;
-console.log("Available markets:",symbols);
-return;
+                else if (quote < record.previous) {
+                    movement = "Price moving DOWN";
+                }
+
+                else {
+                    movement = "Price unchanged";
+                }
+
+            }
+
+            document.getElementById(
+                "change-" + symbol
+            ).innerText = movement;
+
+        }
+
+    };
+
+    socket.onerror = function() {
+
+        document.getElementById("status").innerText =
+            "Connection error";
+
+    };
+
+    socket.onclose = function() {
+
+        document.getElementById("status").innerText =
+            "Disconnected - Reconnecting...";
+
+        reconnectTimer = setTimeout(connectDeriv, 5000);
+
+    };
+
 }
 
-if(ws && ws.readyState===WebSocket.OPEN){
-send({forget_all:"ticks"});
-}
+connectDeriv();
 
-currentSymbol=market.underlying_symbol || market.symbol;
-
-document.getElementById("marketName").textContent=wanted;
-
-candleData=[];
-lastCandle=null;
-
-candles.setData([]);
-
-connection.textContent="Loading "+wanted+"...";
-
-send({
-ticks_history:currentSymbol,
-style:"candles",
-granularity:granularity,
-count:100,
-end:"latest",
-req_id:2
-});
-
-send({
-ticks:currentSymbol,
-subscribe:1,
-req_id:3
-});
-}
-lastCandle={
-time:time,
-open:price,
-high:price,
-low:price,
-close:price
-};
-
-candleData.push(lastCandle);
-
-}else if(time===lastCandle.time){
-
-lastCandle.high=Math.max(lastCandle.high,price);
-lastCandle.low=Math.min(lastCandle.low,price);
-lastCandle.close=price;
-
-}else{
-return;
-}
-
-candles.update(lastCandle);
-updateIndicators();
-
-connection.textContent="LIVE - "+currentSymbol;
-}
-
-function ema(values,period){
-
-if(values.length<period)return null;
-
-let result=values.slice(0,period).reduce((a,b)=>a+b,0)/period;
-const multiplier=2/(period+1);
-
-for(let i=period;i<values.length;i++){
-result=(values[i]-result)*multiplier+result;
-}
-
-return result;
-}
-
-function calculateRSI(values){
-
-if(values.length<15)return null;
-
-let gain=0,loss=0;
-
-for(let i=values.length-14;i<values.length;i++){
-const diff=values[i]-values[i-1];
-
-if(diff>0)gain+=diff;
-else loss-=diff;
-}
-
-if(loss===0)return 100;
-
-return 100-(100/(1+gain/loss));
-}
-
-function updateIndicators(){
-
-const values=candleData.map(c=>c.close);
-
-if(values.length<50)return;
-
-const e20=ema(values,20);
-const e50=ema(values,50);
-const rsi=calculateRSI(values);
-const fast=ema(values,12);
-const slow=ema(values,26);
-const macd=fast-slow;
-
-document.getElementById("ema20").textContent=e20.toFixed(3);
-document.getElementById("ema50").textContent=e50.toFixed(3);
-document.getElementById("rsi").textContent=rsi.toFixed(2);
-document.getElementById("macd").textContent=macd.toFixed(4);
-
-let signal="WAIT";
-let reason="No confirmed direction.";
-
-if(e20>e50 && rsi>50 && rsi<70 && macd>0){
-signal="BUY BIAS";
-reason="Indicators show upward momentum.";
-}
-
-if(e20<e50 && rsi<50 && rsi>30 && macd<0){
-signal="SELL BIAS";
-reason="Indicators show downward momentum.";
-}
-
-document.getElementById("signal").textContent=signal;
-document.getElementById("explanation").textContent=
-reason+" Not a guaranteed trading signal.";
-
-const latest=values[values.length-1];
-const distance=Math.abs(latest-e20)*1.5;
-
-document.getElementById("entry").textContent=
-latest.toFixed(3);
-
-document.getElementById("stop").textContent=
-(latest-distance).toFixed(3);
-
-document.getElementById("target").textContent=
-(latest+distance*2).toFixed(3);
-}
-
-window.addEventListener("resize",()=>{
-chart.applyOptions({
-width:document.getElementById("chart").clientWidth
-});
-});
-
-connect();
 </script>
 
 </body>
