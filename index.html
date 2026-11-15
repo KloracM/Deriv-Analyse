@@ -865,18 +865,33 @@ if (selectedContract === "over") selectedCount = overCount;
 if (selectedContract === "under") selectedCount = underCount;
 
 document.getElementById("contract-analysis").innerHTML = `
-    <h3>${selectedContract.toUpperCase()}</h3>
-    <p>Matches digit: ${selectedDigit}</p>
-    <p>Barrier: ${selectedBarrier}</p>
-    <h2>${percentage(selectedCount)}%</h2>
-    <p>Historical occurrences: ${selectedCount} out of ${total}</p>
-    <hr>
-    <p>Matches: ${percentage(matchesCount)}%</p>
-    <p>Differs: ${percentage(differsCount)}%</p>
-    <p>Even: ${percentage(even)}%</p>
-    <p>Odd: ${percentage(odd)}%</p>
-    <p>Over ${selectedBarrier}: ${percentage(overCount)}%</p>
-    <p>Under ${selectedBarrier}: ${percentage(underCount)}%</p>
+
+    <h3>🎯 Automatic Contract Analysis</h3>
+
+    <div class="card">
+        <h3>MATCHES / DIFFERS</h3>
+        <p>Matches digit ${selectedDigit}: 
+        ${percentage(matchesCount)}%</p>
+        <p>Differs: ${percentage(differsCount)}%</p>
+    </div>
+
+    <div class="card">
+        <h3>EVEN / ODD</h3>
+        <p>Even: ${percentage(even)}%</p>
+        <p>Odd: ${percentage(odd)}%</p>
+    </div>
+
+    <div class="card">
+        <h3>OVER / UNDER</h3>
+        <p>Over ${selectedBarrier}: 
+        ${percentage(overCount)}%</p>
+        <p>Under ${selectedBarrier}: 
+        ${percentage(underCount)}%</p>
+    </div>
+
+    <h3>📊 Scan Summary</h3>
+    <p>Total ticks analysed: ${total}</p>
+    <p>Most frequent digit: ${highestDigit}</p>
 `;
     document.getElementById("digit-statistics").innerHTML =
         `Total ticks: ${total}<br>
