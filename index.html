@@ -153,7 +153,10 @@ footer {
     <option value="1000">Last 1,000 ticks</option>
 </select>
 
-<button id="run-scan" type="button">RUN SCAN</button>
+<button id="run-scan" type="button"
+onclick="document.getElementById('scanner-status').innerText='Button click detected!';">
+RUN SCAN
+</button>
 
 <div id="scanner-status">
     Ready to scan.
