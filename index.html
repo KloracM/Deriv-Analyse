@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deriv Analyser</title>
+
+<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+
+<style>
+*{box-sizing:border-box}
+body{
+margin:0;
+background:#08111f;
+color:#fff;
+font-family:Arial,sans-serif;
+}
+header{
+background:#111e30;
+padding:20px;
+text-align:center;
+border-bottom:1px solid #26364d;
+}
+header h1{margin:0;color:#00d09c}
+header p{color:#9eafc5;font-size:13px}
+.container{padding:18px;max-width:1100px;margin:auto}
+.card{
+background:#142238;
+padding:17px;
+border-radius:12px;
+margin-bottom:16px;
+}
+label{display:block;margin-bottom:8px;color:#aebed2}
+select,button{
+width:100%;
+padding:13px;
+border-radius:7px;
+border:none;
+margin-bottom:12px;
+background:#253750;
+color:white;
+font-size:15px;
+}
+button{background:#00b889;color:#071b17;font-weight:bold}
+.grid{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:12px;
+}
+.stat{
+background:#20324a;
+padding:15px;
+border-radius:9px;
+}
+.stat small{color:#aebed2}
+.stat h2{margin:9px 0;color:#00d09c}
+#chart{height:330px;width:100%}
+.signal{
+text-align:center;
+padding:20px;
+background:#20324a;
+border-radius:10px;
+}
+.signal h2{color:#ffbd45}
+.footer{text-align:center;color:#8193aa;font-size:12px;padding:20px}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>DERIV ANALYSER</h1>
+<p>Smart Market Analysis Dashboard</p>
+</header>
+
+<div class="container">
+
+<div class="card">
+<h3>Market Selection</h3>
+
+<label>Synthetic Index</label>
+<select id="market">
+<option>Volatility 10 Index</option>
+<option>Volatility 25 Index</option>
+<option>Volatility 50 Index</option>
+<option>Volatility 75 Index</option>
+<option>Volatility 100 Index</option>
+</select>
+
+<label>Timeframe</label>
+<select id="timeframe">
+<option>1 Minute</option>
+<option>5 Minutes</option>
+<option>15 Minutes</option>
+<option>30 Minutes</option>
+<option>1 Hour</option>
+</select>
+
+<button onclick="analyse()">ANALYSE MARKET</button>
+</div>
+
+<div class="card">
+<h3>Market Chart</h3>
+<div id="chart"></div>
+</div>
+
+<div class="card">
+<h3>Technical Indicators</h3>
+
+<div class="grid">
+<div class="stat">
+<small>EMA 20</small>
+<h2 id="ema20">--</h2>
+</div>
+
+<div class="stat">
+<small>EMA 50</small>
+<h2 id="ema50">--</h2>
+</div>
+
+<div class="stat">
+<small>RSI</small>
+<h2 id="rsi">--</h2>
+</div>
+
+<div class="stat">
+<small>MACD</small>
+<h2 id="macd">--</h2>
+</div>
+</div>
+</div>
+
+<div class="card">
+<h3>Trading Signal</h3>
+
+<div class="signal">
+<h2 id="signal">WAIT</h2>
+<p id="explanation">Press Analyse Market to generate a demo analysis.</p>
+</div>
+</div>
+
+<div class="card">
+<h3>System Status</h3>
+<p>Mode: <strong style="color:#ffbd45">DEMO</strong></p>
+<p>Live Deriv API: Not connected</p>
+<p>Automatic Trading: Disabled</p>
+</div>
+
+</div>
+
+<div class="footer">
+DERIV ANALYSER | Educational Analysis Tool
+</div>
+
+<script>
+const chartContainer=document.getElementById('chart');
+
+const chart=LightweightCharts.createChart(chartContainer,{
+width:chartContainer.clientWidth,
+height:330,
+layout:{
+background:{color:'#142238'},
+textColor:'#d1dbea'
+},
+grid:{
+vertLines:{color:'#263
