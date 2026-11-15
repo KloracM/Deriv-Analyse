@@ -2,127 +2,120 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Deriv Analyser</title>
-
-<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deriv Advanced Analyser</title>
+<script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
 
 <style>
 *{box-sizing:border-box}
 body{
-margin:0;
-background:#08111f;
-color:#fff;
-font-family:Arial,sans-serif;
+ margin:0;background:#081321;color:white;
+ font-family:Arial,sans-serif
 }
 header{
-background:#111e30;
-padding:20px;
-text-align:center;
-border-bottom:1px solid #26364d;
+ background:#12243a;padding:20px;text-align:center;
+ border-bottom:2px solid #00d09c
 }
-header h1{margin:0;color:#00d09c}
-header p{color:#9eafc5;font-size:13px}
-.container{padding:18px;max-width:1100px;margin:auto}
+header h1{color:#00d09c;margin:0}
+.container{max-width:1100px;margin:auto;padding:15px}
 .card{
-background:#142238;
-padding:17px;
-border-radius:12px;
-margin-bottom:16px;
+ background:#14283f;padding:18px;
+ border-radius:12px;margin-bottom:16px
 }
-label{display:block;margin-bottom:8px;color:#aebed2}
+label{display:block;margin:12px 0 7px;color:#b5c5d8}
 select,button{
-width:100%;
-padding:13px;
-border-radius:7px;
-border:none;
-margin-bottom:12px;
-background:#253750;
-color:white;
-font-size:15px;
+ width:100%;padding:13px;border-radius:7px;
+ border:0;margin-bottom:10px;font-size:15px
 }
-button{background:#00b889;color:#071b17;font-weight:bold}
+select{background:#263d58;color:white}
+button{
+ background:#00d09c;color:#071b17;
+ font-weight:bold;cursor:pointer
+}
 .grid{
-display:grid;
-grid-template-columns:repeat(2,1fr);
-gap:12px;
+ display:grid;grid-template-columns:repeat(2,1fr);
+ gap:10px
 }
 .stat{
-background:#20324a;
-padding:15px;
-border-radius:9px;
+ background:#203a56;padding:15px;border-radius:9px
 }
-.stat small{color:#aebed2}
-.stat h2{margin:9px 0;color:#00d09c}
-#chart{height:330px;width:100%}
-.signal{
-text-align:center;
-padding:20px;
-background:#20324a;
-border-radius:10px;
-}
-.signal h2{color:#ffbd45}
-.footer{text-align:center;color:#8193aa;font-size:12px;padding:20px}
+.stat small{color:#b5c5d8}
+.stat h2{color:#00d09c;font-size:20px}
+#chart{height:350px;width:100%}
+.signal{text-align:center;padding:18px}
+#signal{font-size:25px;color:#ffc857}
+.status{color:#ffc857;font-size:13px}
+.footer{text-align:center;padding:20px;color:#8799ad}
 </style>
 </head>
 
 <body>
 
 <header>
-<h1>DERIV ANALYSER</h1>
-<p>Smart Market Analysis Dashboard</p>
+<h1>DERIV ADVANCED ANALYSER</h1>
+<p>Live Synthetic Market Analysis</p>
+<div id="connection" class="status">Connecting...</div>
 </header>
 
 <div class="container">
 
 <div class="card">
-<h3>Market Selection</h3>
+<h3>Market Settings</h3>
 
-<label>Synthetic Index</label>
+<label>Select Market</label>
 <select id="market">
-<option>Volatility 10 Index</option>
-<option>Volatility 25 Index</option>
-<option>Volatility 50 Index</option>
-<option>Volatility 75 Index</option>
-<option>Volatility 100 Index</option>
+<option value="10">Volatility 10 Index</option>
+<option value="25">Volatility 25 Index</option>
+<option value="50">Volatility 50 Index</option>
+<option value="75">Volatility 75 Index</option>
+<option value="100">Volatility 100 Index</option>
 </select>
 
 <label>Timeframe</label>
 <select id="timeframe">
-<option>1 Minute</option>
-<option>5 Minutes</option>
-<option>15 Minutes</option>
-<option>30 Minutes</option>
-<option>1 Hour</option>
+<option value="60">1 Minute</option>
+<option value="300">5 Minutes</option>
+<option value="900">15 Minutes</option>
+<option value="3600">1 Hour</option>
 </select>
 
-<button onclick="analyse()">ANALYSE MARKET</button>
+<button onclick="changeMarket()">LOAD MARKET</button>
 </div>
 
 <div class="card">
-<h3>Market Chart</h3>
+<h3>Live Market Price</h3>
+<div class="grid">
+<div class="stat">
+<small>Current Price</small>
+<h2 id="price">--</h2>
+</div>
+<div class="stat">
+<small>Market</small>
+<h2 id="marketName">Volatility 10</h2>
+</div>
+</div>
+</div>
+
+<div class="card">
+<h3>Live Candlestick Chart</h3>
 <div id="chart"></div>
 </div>
 
 <div class="card">
 <h3>Technical Indicators</h3>
-
 <div class="grid">
 <div class="stat">
 <small>EMA 20</small>
 <h2 id="ema20">--</h2>
 </div>
-
 <div class="stat">
 <small>EMA 50</small>
 <h2 id="ema50">--</h2>
 </div>
-
 <div class="stat">
-<small>RSI</small>
+<small>RSI 14</small>
 <h2 id="rsi">--</h2>
 </div>
-
 <div class="stat">
 <small>MACD</small>
 <h2 id="macd">--</h2>
@@ -131,36 +124,324 @@ border-radius:10px;
 </div>
 
 <div class="card">
-<h3>Trading Signal</h3>
-
+<h3>Market Analysis</h3>
 <div class="signal">
 <h2 id="signal">WAIT</h2>
-<p id="explanation">Press Analyse Market to generate a demo analysis.</p>
+<p id="explanation">Waiting for live market data...</p>
 </div>
 </div>
 
 <div class="card">
-<h3>System Status</h3>
-<p>Mode: <strong style="color:#ffbd45">DEMO</strong></p>
-<p>Live Deriv API: Not connected</p>
-<p>Automatic Trading: Disabled</p>
+<h3>Trade Planning</h3>
+<p>Entry Price: <strong id="entry">--</strong></p>
+<p>Stop Loss: <strong id="stop">--</strong></p>
+<p>Take Profit: <strong id="target">--</strong></p>
+<p class="status">Planning estimates only. Confirm risk and contract details before trading.</p>
+</div>
+
+<div class="card">
+<h3>System Information</h3>
+<p>Data Source: Deriv Public API</p>
+<p>Account Connection: Not required</p>
+<p>Trading Execution: Disabled</p>
+<p>Analysis Mode: Live Market Data</p>
 </div>
 
 </div>
 
 <div class="footer">
-DERIV ANALYSER | Educational Analysis Tool
+DERIV ADVANCED ANALYSER | EDUCATIONAL TOOL
 </div>
 
 <script>
-const chartContainer=document.getElementById('chart');
+const connection =
+document.getElementById("connection");
 
-const chart=LightweightCharts.createChart(chartContainer,{
-width:chartContainer.clientWidth,
-height:330,
+const chart = LightweightCharts.createChart(
+document.getElementById("chart"),{
+width:document.getElementById("chart").clientWidth,
+height:350,
 layout:{
-background:{color:'#142238'},
-textColor:'#d1dbea'
+background:{color:"#14283f"},
+textColor:"#ffffff"
 },
 grid:{
-vertLines:{color:'#263
+vertLines:{color:"#263d58"},
+horzLines:{color:"#263d58"}
+},
+timeScale:{timeVisible:true}
+});
+
+const candles = chart.addCandlestickSeries({
+upColor:"#00d09c",
+downColor:"#ff5263",
+borderUpColor:"#00d09c",
+borderDownColor:"#ff5263",
+wickUpColor:"#00d09c",
+wickDownColor:"#ff5263"
+});
+
+let ws;
+let candleData=[];
+let currentSymbol="";
+let granularity=60;
+let lastCandle=null;
+let symbols=[];
+
+function send(data){
+if(ws && ws.readyState===WebSocket.OPEN){
+ws.send(JSON.stringify(data));
+}
+}
+
+function connect(){
+connection.textContent="Connecting to Deriv...";
+
+ws=new WebSocket(
+"wss://api.derivws.com/trading/v1/options/ws/public"
+);
+
+ws.onopen=()=>{
+connection.textContent="Connected - Loading markets";
+
+send({
+active_symbols:"brief",
+req_id:1
+});
+};
+
+ws.onmessage=(event)=>{
+const data=JSON.parse(event.data);
+
+if(data.error){
+connection.textContent="API: "+data.error.message;
+return;
+}
+
+if(data.msg_type==="active_symbols"){
+symbols=data.active_symbols||[];
+changeMarket();
+}
+
+if(data.msg_type==="history"){
+const history=data.history;
+
+if(history && history.candles){
+candleData=history.candles.map(c=>({
+time:Number(c.epoch),
+open:Number(c.open),
+high:Number(c.high),
+low:Number(c.low),
+close:Number(c.close)
+}));
+
+candles.setData(candleData);
+lastCandle=candleData[candleData.length-1];
+updateIndicators();
+chart.timeScale().fitContent();
+}
+}
+
+if(data.msg_type==="tick"){
+const tick=data.tick;
+if(!tick)return;
+
+const price=Number(tick.quote);
+const time=Number(tick.epoch);
+
+document.getElementById("price").textContent=price;
+
+updateCandle(price,time);
+}
+};
+
+ws.onerror=()=>{
+connection.textContent="Connection error. Check internet.";
+};
+
+ws.onclose=()=>{
+connection.textContent="Disconnected. Reconnecting...";
+setTimeout(connect,5000);
+};
+}
+
+function changeMarket(){
+
+if(!symbols.length)return;
+
+const selected=document.getElementById("market").value;
+granularity=Number(
+document.getElementById("timeframe").value
+);
+
+const wanted="Volatility "+selected+" Index";
+
+const matches=symbols.filter(s=>
+s.display_name &&
+s.display_name.toLowerCase()===wanted.toLowerCase()
+);
+
+const market=matches[0];
+
+if(!market){
+connection.textContent="Market not found: "+wanted;
+return;
+}
+
+if(ws && ws.readyState===WebSocket.OPEN){
+send({forget_all:"ticks"});
+}
+
+currentSymbol=market.symbol;
+
+document.getElementById("marketName").textContent=
+market.display_name;
+
+candleData=[];
+lastCandle=null;
+
+candles.setData([]);
+
+connection.textContent="Loading "+market.display_name+"...";
+
+send({
+ticks_history:currentSymbol,
+style:"candles",
+granularity:granularity,
+count:100,
+end:"latest",
+req_id:2
+});
+
+send({
+ticks:currentSymbol,
+subscribe:1,
+req_id:3
+});
+}
+
+function updateCandle(price,epoch){
+
+if(!currentSymbol)return;
+
+const time=Math.floor(epoch/granularity)*granularity;
+
+if(!lastCandle || time>lastCandle.time){
+
+lastCandle={
+time:time,
+open:price,
+high:price,
+low:price,
+close:price
+};
+
+candleData.push(lastCandle);
+
+}else if(time===lastCandle.time){
+
+lastCandle.high=Math.max(lastCandle.high,price);
+lastCandle.low=Math.min(lastCandle.low,price);
+lastCandle.close=price;
+
+}else{
+return;
+}
+
+candles.update(lastCandle);
+updateIndicators();
+
+connection.textContent="LIVE - "+currentSymbol;
+}
+
+function ema(values,period){
+
+if(values.length<period)return null;
+
+let result=values.slice(0,period).reduce((a,b)=>a+b,0)/period;
+const multiplier=2/(period+1);
+
+for(let i=period;i<values.length;i++){
+result=(values[i]-result)*multiplier+result;
+}
+
+return result;
+}
+
+function calculateRSI(values){
+
+if(values.length<15)return null;
+
+let gain=0,loss=0;
+
+for(let i=values.length-14;i<values.length;i++){
+const diff=values[i]-values[i-1];
+
+if(diff>0)gain+=diff;
+else loss-=diff;
+}
+
+if(loss===0)return 100;
+
+return 100-(100/(1+gain/loss));
+}
+
+function updateIndicators(){
+
+const values=candleData.map(c=>c.close);
+
+if(values.length<50)return;
+
+const e20=ema(values,20);
+const e50=ema(values,50);
+const rsi=calculateRSI(values);
+const fast=ema(values,12);
+const slow=ema(values,26);
+const macd=fast-slow;
+
+document.getElementById("ema20").textContent=e20.toFixed(3);
+document.getElementById("ema50").textContent=e50.toFixed(3);
+document.getElementById("rsi").textContent=rsi.toFixed(2);
+document.getElementById("macd").textContent=macd.toFixed(4);
+
+let signal="WAIT";
+let reason="No confirmed direction.";
+
+if(e20>e50 && rsi>50 && rsi<70 && macd>0){
+signal="BUY BIAS";
+reason="Indicators show upward momentum.";
+}
+
+if(e20<e50 && rsi<50 && rsi>30 && macd<0){
+signal="SELL BIAS";
+reason="Indicators show downward momentum.";
+}
+
+document.getElementById("signal").textContent=signal;
+document.getElementById("explanation").textContent=
+reason+" Not a guaranteed trading signal.";
+
+const latest=values[values.length-1];
+const distance=Math.abs(latest-e20)*1.5;
+
+document.getElementById("entry").textContent=
+latest.toFixed(3);
+
+document.getElementById("stop").textContent=
+(latest-distance).toFixed(3);
+
+document.getElementById("target").textContent=
+(latest+distance*2).toFixed(3);
+}
+
+window.addEventListener("resize",()=>{
+chart.applyOptions({
+width:document.getElementById("chart").clientWidth
+});
+});
+
+connect();
+</script>
+
+</body>
+</html>
