@@ -490,17 +490,22 @@ function connect(){
   $("connection").style.color = "#ff5577";
 
  };
-
- socket.onclose = function(){
+socket.onclose = function(event){
 
   if(ws !== socket) return;
 
-  $("connection").textContent = "● DISCONNECTED";
+  $("connection").textContent =
+    "DISCONNECTED | Code: " + event.code +
+    " | " + (event.reason || "No reason provided");
+
   $("connection").style.color = "#ff5577";
+
+  console.log("Deriv connection closed:", event.code, event.reason);
 
   reconnectTimer = setTimeout(connect,5000);
 
- };
+};
+ 
 
 }
 
