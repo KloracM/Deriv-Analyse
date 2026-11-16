@@ -685,18 +685,24 @@ sendRequest({
     end: "latest",
     style: "ticks"
 });
-    const contractSlider =
+    
+const contractSlider =
     document.querySelector(".contract-slider");
 
 if (contractSlider) {
     setTimeout(() => {
-        contractSlider.scrollIntoView({
-            behavior: "smooth",
-            block: "center"
-        });
-    }, 500);
-}
 
+        const position =
+            contractSlider.getBoundingClientRect().top +
+            window.scrollY - 100;
+
+        window.scrollTo({
+            top: position,
+            behavior: "smooth"
+        });
+
+    }, 800);
+}
 document.getElementById("contract-analysis").innerHTML =
     "<p>Selected market: " + symbol +
     "</p><p>Choose a contract to view its analysis.</p>";
