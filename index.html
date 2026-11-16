@@ -3,221 +3,176 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Deriv Market Analyser</title>
 
-<script src="https://unpkg.com/lightweight-charts@4.2.2/dist/lightweight-charts.standalone.production.js"></script>
-
 <style>
-* {
-    box-sizing: border-box;
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+ background:#080d1b;
+ color:#eef3ff;
+ font-family:Arial,sans-serif;
+ padding:15px;
 }
 
-body {
-    margin: 0;
-    padding: 14px;
-    background: #101820;
-    color: white;
-    font-family: Arial, sans-serif;
+header{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ flex-wrap:wrap;
+ gap:12px;
+ margin-bottom:20px;
 }
 
-header, .card {
-    background: #172631;
-    padding: 17px;
-    border-radius: 13px;
-    margin-bottom: 15px;
+h1{font-size:23px;color:#fff}
+.logo{color:#00e5a0}
+.status{font-size:12px;color:#aaa}
+
+button,select{
+ padding:12px;
+ border:0;
+ border-radius:8px;
+ font-weight:bold;
+ cursor:pointer;
 }
 
-h1 {
-    color: #00d9a5;
-    font-size: 23px;
+button{background:#00d99a;color:#06131b}
+select{background:#202c42;color:white}
+
+.scan{
+ width:100%;
+ padding:18px;
+ font-size:19px;
+ background:linear-gradient(90deg,#00d99a,#00a8ff);
+ color:#06131b;
+ margin:15px 0;
 }
 
-h2, h3 {
-    color: #00d9a5;
+.section{margin:20px 0}
+.section h2{font-size:17px;margin-bottom:12px}
+
+.grid{
+ display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(145px,1fr));
+ gap:12px;
 }
 
-p {
-    line-height: 1.5;
+.card{
+ background:#141e32;
+ border:1px solid #253653;
+ border-radius:12px;
+ padding:15px;
+ min-width:0;
 }
 
-#status {
-    color: #ffc857;
-    font-weight: bold;
+.card h3{font-size:14px;color:#a9bad8}
+.value{font-size:24px;font-weight:bold;margin-top:10px}
+.small{font-size:12px;color:#9eacc4;margin-top:8px}
+
+.green{color:#00e5a0}
+.red{color:#ff5577}
+.yellow{color:#ffd166}
+.blue{color:#48baff}
+
+#digits{
+ display:grid;
+ grid-template-columns:repeat(10,1fr);
+ gap:5px;
+ margin-top:12px;
 }
 
-#market-count {
-    color: #00d9a5;
+.digit{
+ background:#202c42;
+ border-radius:9px;
+ padding:12px 2px;
+ text-align:center;
+ font-size:20px;
+ font-weight:bold;
+ border:1px solid #34445f;
 }
 
-input, select {
-    width: 100%;
-    padding: 13px;
-    margin-top: 10px;
-    border: 1px solid #345365;
-    border-radius: 8px;
-    background: #263b49;
-    color: white;
-    font-size: 15px;
+.digit.active{
+ background:linear-gradient(135deg,#ffb000,#ff477e);
+ color:white;
+ transform:scale(1.07);
+ box-shadow:0 0 15px #ff477e;
+ animation:pop .4s ease;
 }
 
-button {
-    padding: 12px;
-    border: none;
-    border-radius: 8px;
-    background: #00d9a5;
-    color: #101820;
-    font-weight: bold;
-    cursor: pointer;
+@keyframes pop{
+ 50%{transform:scale(1.2)}
 }
 
-button:disabled {
-    opacity: 0.5;
+.digit .percent{
+ display:block;
+ font-size:9px;
+ margin-top:5px;
+ color:#d5e0f5;
 }
 
-.market-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    margin-top: 15px;
+.highlight{
+ background:linear-gradient(135deg,#162d4b,#25204b);
+ border:1px solid #476a9b;
 }
 
-.market-card {
-    background: #263b49;
-    border: 1px solid #345365;
-    padding: 13px 9px;
-    border-radius: 11px;
-    text-align: center;
-    cursor: pointer;
-    min-width: 0;
+.big-digit{
+ font-size:75px;
+ font-weight:bold;
+ text-align:center;
+ color:#ffca5c;
+ text-shadow:0 0 25px #ff477e;
+ margin:12px;
 }
 
-.market-card.selected {
-    border: 2px solid #00d9a5;
+.signal{
+ font-size:25px;
+ font-weight:bold;
+ text-align:center;
+ padding:15px;
+ border-radius:10px;
+ margin-top:10px;
 }
 
-.market-card h3 {
-    font-size: 13px;
-    color: white;
+canvas{
+ width:100%;
+ height:220px;
+ background:#0c1425;
+ border-radius:10px;
+ margin-top:12px;
 }
 
-.market-card p {
-    font-size: 11px;
-    color: #a9bdca;
-    overflow-wrap: anywhere;
+.row{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ gap:10px;
+ flex-wrap:wrap;
 }
 
-.market-prediction {
-    background: #203e50;
-    padding: 9px 5px;
-    border-radius: 8px;
-    color: #00d9a5;
-    font-size: 12px;
+table{
+ width:100%;
+ border-collapse:collapse;
+ font-size:12px;
 }
 
-#price {
-    color: #00d9a5;
-    font-size: 30px;
-    font-weight: bold;
-    margin: 15px 0;
-    overflow-wrap: anywhere;
+td,th{
+ padding:10px 5px;
+ border-bottom:1px solid #283650;
+ text-align:center;
 }
 
-#movement {
-    font-weight: bold;
+footer{
+ text-align:center;
+ color:#65748c;
+ font-size:11px;
+ margin:30px 0 10px;
 }
 
-.contract-options {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.contract-option {
-    background: #263b49;
-    padding: 13px;
-    border-radius: 10px;
-}
-
-.contract-option h3 {
-    margin-top: 0;
-}
-
-.contract-option button {
-    width: 100%;
-}
-
-.contract-option button.active {
-    background: #ffc857;
-}
-
-#candidate-panel {
-    background: #203e50;
-    padding: 20px;
-    text-align: center;
-    border-radius: 12px;
-}
-
-#candidate-digit {
-    font-size: 65px;
-    color: #00d9a5;
-    font-weight: bold;
-    margin: 10px;
-}
-
-.metric {
-    background: #263b49;
-    padding: 12px;
-    border-radius: 9px;
-    margin: 8px 0;
-}
-
-.progress-track {
-    background: #263b49;
-    height: 9px;
-    border-radius: 10px;
-    overflow: hidden;
-    margin-top: 7px;
-}
-
-.progress-fill {
-    background: #00d9a5;
-    height: 100%;
-}
-
-.result-win {
-    color: #00d9a5;
-}
-
-.result-loss {
-    color: #ff7676;
-}
-
-.small-note {
-    font-size: 12px;
-    color: #a9bdca;
-}
-
-#chart {
-    width: 100%;
-    height: 300px;
-}
-
-footer {
-    text-align: center;
-    color: #8999a4;
-    padding: 18px;
-    font-size: 12px;
-}
-
-@media (max-width: 360px) {
-    body {
-        padding: 8px;
-    }
-
-    .market-grid {
-        grid-template-columns: 1fr;
-    }
+@media(max-width:500px){
+ body{padding:10px}
+ #digits{gap:3px}
+ .digit{font-size:16px;padding:10px 1px}
+ .value{font-size:20px}
 }
 </style>
 </head>
@@ -225,2012 +180,625 @@ footer {
 <body>
 
 <header>
-    <h1>DERIV MARKET ANALYSER</h1>
-
-    <p>Live Synthetic Indices Dashboard</p>
-
-    <p id="status">Connecting to Deriv...</p>
-
-    <div id="market-count">
-        Waiting for markets...
-    </div>
+ <div>
+  <h1>DERIV <span class="logo">ANALYSER</span></h1>
+  <div class="status">Advanced Synthetic Market Intelligence</div>
+ </div>
+ <div class="status" id="connection">● Connecting...</div>
 </header>
 
-
-<!-- MARKET SEARCH -->
-
 <div class="card">
+ <div class="row">
+  <div>
+   <h3>SELECT VOLATILITY INDEX</h3>
+   <select id="market">
+    <option value="R_10">Volatility 10</option>
+    <option value="R_25">Volatility 25</option>
+    <option value="R_50" selected>Volatility 50</option>
+    <option value="R_75">Volatility 75</option>
+    <option value="R_100">Volatility 100</option>
+    <option value="1HZ10V">Volatility 10 (1s)</option>
+    <option value="1HZ25V">Volatility 25 (1s)</option>
+    <option value="1HZ50V">Volatility 50 (1s)</option>
+    <option value="1HZ75V">Volatility 75 (1s)</option>
+    <option value="1HZ100V">Volatility 100 (1s)</option>
+   </select>
+  </div>
 
-    <h2>Market Search</h2>
-
-    <input
-        type="text"
-        id="search"
-        placeholder="Search synthetic markets..."
-    >
-
-    <div id="market-list">
-        Waiting for market data...
-    </div>
-
+  <div>
+   <h3>OTHER SYNTHETICS</h3>
+   <select id="otherMarket">
+    <option value="">Select another market</option>
+    <option value="BOOM1000">Boom 1000</option>
+    <option value="CRASH1000">Crash 1000</option>
+    <option value="BOOM500">Boom 500</option>
+    <option value="CRASH500">Crash 500</option>
+    <option value="JUMP10">Jump 10</option>
+    <option value="JUMP25">Jump 25</option>
+    <option value="JUMP50">Jump 50</option>
+    <option value="JUMP75">Jump 75</option>
+    <option value="JUMP100">Jump 100</option>
+    <option value="STEPS">Step Index</option>
+    <option value="RDBULL">Range Break 100</option>
+    <option value="RDBEAR">Range Break 200</option>
+   </select>
+  </div>
+ </div>
 </div>
 
+<button class="scan" id="scanButton">⚡ RUN SCAN NOW</button>
 
-<!-- LIVE MARKET -->
+<div class="section grid">
+ <div class="card">
+  <h3>LIVE PRICE</h3>
+  <div class="value blue" id="price">--</div>
+  <div class="small" id="marketName">Volatility 50</div>
+ </div>
 
-<div class="card">
+ <div class="card">
+  <h3>LAST DIGIT</h3>
+  <div class="value yellow" id="lastDigit">--</div>
+  <div class="small">Latest tick digit</div>
+ </div>
 
-    <h2>Selected Market</h2>
+ <div class="card">
+  <h3>MARKET MOVEMENT</h3>
+  <div class="value" id="movement">--</div>
+  <div class="small">Recent tick direction</div>
+ </div>
 
-    <select id="market-select">
-        <option value="">Waiting for markets...</option>
-    </select>
-
-    <h2>Live Price</h2>
-
-    <div id="selected-name">
-        No market selected
-    </div>
-
-    <div id="price">---</div>
-
-    <div id="movement">
-        Waiting for live prices...
-    </div>
-
+ <div class="card">
+  <h3>TOTAL TICKS</h3>
+  <div class="value green" id="tickCount">0</div>
+  <div class="small">Collected market ticks</div>
+ </div>
 </div>
 
+<div class="section card highlight">
+ <div class="row">
+  <h2>🎯 AI CANDIDATE DIGIT</h2>
+  <span class="small">Experimental statistical estimate</span>
+ </div>
 
-<!-- CHART -->
+ <div class="big-digit" id="candidate">?</div>
 
-<div class="card">
-
-    <h2>Live Candlestick Chart</h2>
-
-    <div id="chart"></div>
-
-    <p class="small-note">
-        One-minute candles using live market ticks.
-    </p>
-
+ <div style="text-align:center">
+  <div class="value green" id="confidence">0%</div>
+  <div class="small">Relative statistical frequency</div>
+ </div>
 </div>
 
+<div class="section card">
+ <div class="row">
+  <h2>🔢 LIVE DIGIT DISTRIBUTION</h2>
+  <span class="small">Digits 0–9</span>
+ </div>
 
-<!-- DIGIT SCANNER -->
+ <div id="digits"></div>
 
-<div class="card" id="digit-scanner">
-
-    <h2>🤖 AI Digit Scanner</h2>
-
-    <p>
-        Analyse historical market digits and identify
-        statistical patterns.
-    </p>
-
-    <label for="scan-count">
-        Number of ticks to analyse:
-    </label>
-
-    <select id="scan-count">
-
-        <option value="100">Last 100 ticks</option>
-
-        <option value="500">Last 500 ticks</option>
-
-        <option value="1000">Last 1,000 ticks</option>
-
-    </select>
-
-    <button
-        id="run-scan"
-        type="button"
-        style="width:100%;"
-        onclick="runDigitScan()"
-    >
-        RUN SCAN
-    </button>
-
-    <div id="scanner-status">
-        Ready to scan.
-    </div>
-
+ <div class="small">
+  Distribution is calculated from the latest 100 ticks.
+ </div>
 </div>
 
+<div class="section grid">
+ <div class="card">
+  <h3>MOST FREQUENT DIGIT</h3>
+  <div class="value green" id="hotDigit">--</div>
+ </div>
 
-<!-- CONTRACT SELECTION -->
+ <div class="card">
+  <h3>LEAST FREQUENT DIGIT</h3>
+  <div class="value red" id="coldDigit">--</div>
+ </div>
 
-<div class="card" id="contract-section">
+ <div class="card">
+  <h3>EVEN / ODD</h3>
+  <div class="value blue" id="evenOdd">--</div>
+ </div>
 
-    <h2>🎯 Contract Selection</h2>
-
-    <p>
-        Select the contract type you want to analyse.
-    </p>
-
-    <div class="contract-options">
-
-        <div class="contract-option">
-            <h3>MATCHES</h3>
-            <button id="matches-btn" type="button">
-                MATCHES
-            </button>
-        </div>
-
-        <div class="contract-option">
-            <h3>DIFFERS</h3>
-            <button id="differs-btn" type="button">
-                DIFFERS
-            </button>
-        </div>
-
-        <div class="contract-option">
-            <h3>EVEN</h3>
-            <button id="even-btn" type="button">
-                EVEN
-            </button>
-        </div>
-
-        <div class="contract-option">
-            <h3>ODD</h3>
-            <button id="odd-btn" type="button">
-                ODD
-            </button>
-        </div>
-
-        <div class="contract-option">
-            <h3>OVER</h3>
-            <button id="over-btn" type="button">
-                OVER 4
-            </button>
-        </div>
-
-        <div class="contract-option">
-            <h3>UNDER</h3>
-            <button id="under-btn" type="button">
-                UNDER 5
-            </button>
-        </div>
-
-    </div>
-
+ <div class="card">
+  <h3>OVERALL TREND</h3>
+  <div class="value yellow" id="trend">WAIT</div>
+ </div>
 </div>
 
+<div class="section card">
+ <h2>🔮 FUTURE TICK PREDICTIONS</h2>
 
-<!-- CANDIDATE DIGIT -->
+ <div class="grid">
+  <div class="card">
+   <h3>NEXT TICK ESTIMATE</h3>
+   <div class="value yellow" id="nextTick">--</div>
+  </div>
 
-<div class="card">
+  <div class="card">
+   <h3>FOLLOWING ESTIMATE</h3>
+   <div class="value blue" id="followingTick">--</div>
+  </div>
 
-    <h2>Experimental Candidate</h2>
+  <div class="card">
+   <h3>EXPECTED DIRECTION</h3>
+   <div class="value" id="futureDirection">WAIT</div>
+  </div>
+ </div>
 
-    <div id="candidate-panel">
-
-        <p>Historical leading digit</p>
-
-        <div id="candidate-digit">--</div>
-
-        <div id="candidate-frequency">
-            Run a scan to generate a candidate.
-        </div>
-
-    </div>
-
-    <div class="metric">
-
-        <strong>Signal status</strong>
-
-        <p id="confidence">
-            Not yet analysed
-        </p>
-
-    </div>
-
-    <p class="small-note">
-        The historical leader is not a prediction.
-        No predictive confidence has been established.
-    </p>
-
+ <div class="small">
+  These are experimental estimates based on recent tick patterns,
+  not guaranteed predictions of future market movements.
+ </div>
 </div>
 
-
-<!-- CONTRACT ANALYSIS -->
-
-<div class="card">
-
-    <h2>📊 Selected Contract Analysis</h2>
-
-    <div id="contract-analysis">
-        Select a market and run a scan.
-    </div>
-
+<div class="section card">
+ <h2>📊 MARKET CHART</h2>
+ <canvas id="chart"></canvas>
 </div>
 
+<div class="section card">
+ <h2>📈 TRADING SIGNAL ANALYSIS</h2>
 
-<!-- EXPIRY SETTINGS -->
+ <div class="signal yellow" id="signal">WAITING FOR DATA</div>
 
-<div class="card">
+ <div class="grid" style="margin-top:12px">
+  <div class="card">
+   <h3>EMA 9</h3>
+   <div class="value" id="ema9">--</div>
+  </div>
 
-    <h2>⏱️ Paper Test Settings</h2>
+  <div class="card">
+   <h3>EMA 21</h3>
+   <div class="value" id="ema21">--</div>
+  </div>
 
-    <label for="expiry-ticks">
-        Expiry after how many ticks?
-    </label>
-
-    <select id="expiry-ticks">
-
-        <option value="1">1 tick</option>
-
-        <option value="2">2 ticks</option>
-
-        <option value="3">3 ticks</option>
-
-        <option value="5">5 ticks</option>
-
-        <option value="10">10 ticks</option>
-
-    </select>
-
-    <button
-        id="start-paper-test"
-        type="button"
-        style="width:100%;"
-    >
-        START PAPER TEST
-    </button>
-
-    <div id="paper-status">
-        Waiting for paper test.
-    </div>
-
+  <div class="card">
+   <h3>RSI ESTIMATE</h3>
+   <div class="value" id="rsi">--</div>
+  </div>
+ </div>
 </div>
 
-
-<!-- DIGIT FREQUENCY -->
-
-<div class="card">
-
-    <h2>Digit Frequency (0–9)</h2>
-
-    <div id="digit-results">
-        Waiting for scan...
-    </div>
-
+<div class="section card">
+ <h2>📋 SCAN HISTORY</h2>
+ <table>
+  <thead>
+   <tr>
+    <th>TIME</th>
+    <th>DIGIT</th>
+    <th>FREQUENCY</th>
+    <th>SIGNAL</th>
+   </tr>
+  </thead>
+  <tbody id="history">
+   <tr><td colspan="4">Waiting for scan...</td></tr>
+  </tbody>
+ </table>
 </div>
-
-
-<!-- STATISTICS -->
-
-<div class="card">
-
-    <h2>Market Statistics</h2>
-
-    <div id="digit-statistics">
-        No analysis available yet.
-    </div>
-
-</div>
-
-
-<!-- INSIGHTS -->
-
-<div class="card">
-
-    <h2>Scanner Insights</h2>
-
-    <div id="digit-insights">
-        Run a scan to see statistical insights.
-    </div>
-
-</div>
-
-
-<!-- PAPER TEST HISTORY -->
-
-<div class="card">
-
-    <h2>📚 Paper Test History</h2>
-
-    <div id="paper-summary">
-        No tests recorded.
-    </div>
-
-    <div id="paper-history">
-        No results yet.
-    </div>
-
-</div>
-
-
-<!-- CONNECTION INFORMATION -->
-
-<div class="card">
-
-    <h2>Connection Information</h2>
-
-    <div id="connection-info">
-        Starting...
-    </div>
-
-</div>
-
 
 <footer>
-    Deriv Market Analyser | Experimental market analysis
+ DERIV MARKET ANALYSER | Research and educational tool.
+ No guaranteed trading predictions.
 </footer>
 
-
 <script>
+const WS_URL = "wss://ws.derivws.com/websockets/v3?app_id=1089";
 
-"use strict";
+let ws;
+let ticks = [];
+let prices = [];
+let counts = Array(10).fill(0);
+let scanHistory = [];
+let currentSymbol = "R_50";
+let scanTimer;
+let reconnectTimer;
+let manualScan = false;
 
+const $ = id => document.getElementById(id);
 
-// ======================================
-// 1. CONFIGURATION
-// ======================================
+function connect(){
 
-const WS_URL =
-    "wss://api.derivws.com/trading/v1/options/ws/public";
+ clearTimeout(reconnectTimer);
 
+ if(ws){
+  ws.onclose = null;
+  ws.close();
+ }
 
-// ======================================
-// 2. HTML ELEMENTS
-// ======================================
+ $("connection").textContent = "● Connecting...";
 
-const statusBox =
-    document.getElementById("status");
+ ws = new WebSocket(WS_URL);
 
-const selector =
-    document.getElementById("market-select");
+ ws.onopen = () => {
+  $("connection").textContent = "● CONNECTED";
+  $("connection").style.color = "#00e5a0";
 
-const marketList =
-    document.getElementById("market-list");
+  subscribe();
+ };
 
-const marketCount =
-    document.getElementById("market-count");
+ ws.onmessage = event => {
+  const data = JSON.parse(event.data);
 
-const connectionInfo =
-    document.getElementById("connection-info");
+  if(data.error){
+   $("connection").textContent = "● API ERROR";
+   return;
+  }
 
+  if(data.msg_type === "tick"){
+   receiveTick(data.tick);
+  }
 
-// ======================================
-// 3. APPLICATION VARIABLES
-// ======================================
-
-let socket = null;
-
-let markets = [];
-
-let selectedSymbol = "";
-
-let previousPrice = null;
-
-let requestId = 0;
-
-let reconnectTimer = null;
-
-let reconnectDelay = 2000;
-
-let tickSubscriptionId = null;
-
-let selectedContract = "matches";
-
-let candidateDigit = null;
-
-let latestDigitCounts = null;
-
-let latestTotal = 0;
-
-let latestPipSize = null;
-
-let previousDigitPercentages = null;
-
-let paperTest = null;
-
-let marketLeaders = {};
-
-let marketPrices = {};
-
-let paperHistory = [];
-
-try {
-
-    paperHistory =
-        JSON.parse(
-            localStorage.getItem("derivPaperHistory") || "[]"
-        );
-
-    if (!Array.isArray(paperHistory)) {
-        paperHistory = [];
-    }
-
-} catch (error) {
-
-    paperHistory = [];
-
-}
-
-
-// ======================================
-// 4. CHART SETUP
-// ======================================
-
-const chartContainer =
-    document.getElementById("chart");
-
-const chart =
-    LightweightCharts.createChart(chartContainer, {
-
-        width: chartContainer.clientWidth,
-
-        height: 300,
-
-        layout: {
-            background: {
-                color: "#172631"
-            },
-
-            textColor: "#ffffff"
-        },
-
-        grid: {
-            vertLines: {
-                color: "#263746"
-            },
-
-            horzLines: {
-                color: "#263746"
-            }
-        },
-
-        timeScale: {
-            timeVisible: true,
-            secondsVisible: false
-        }
-
+  if(data.msg_type === "history"){
+   if(data.history){
+    data.history.prices.forEach((p,i)=>{
+     if(!prices.length || prices[prices.length-1] !== Number(p)){
+      prices.push(Number(p));
+     }
     });
 
-const candleSeries =
-    chart.addCandlestickSeries();
+    prices = prices.slice(-200);
+    updateChart();
+   }
+  }
+ };
 
-let currentCandle = null;
+ ws.onclose = () => {
+  $("connection").textContent = "● DISCONNECTED";
+  $("connection").style.color = "#ff5577";
 
+  reconnectTimer = setTimeout(connect,3000);
+ };
 
-window.addEventListener("resize", function() {
-
-    chart.applyOptions({
-        width: chartContainer.clientWidth
-    });
-
-});
-
-
-// ======================================
-// 5. SEND REQUEST
-// ======================================
-
-function sendRequest(data) {
-
-    if (
-        socket &&
-        socket.readyState === WebSocket.OPEN
-    ) {
-
-        socket.send(JSON.stringify({
-
-            ...data,
-
-            req_id: ++requestId
-
-        }));
-
-        return true;
-
-    }
-
-    return false;
-
+ ws.onerror = () => {
+  $("connection").textContent = "● CONNECTION ERROR";
+ };
 }
 
+function subscribe(){
 
-// ======================================
-// 6. MARKET IDENTIFICATION
-// ======================================
+ if(!ws || ws.readyState !== WebSocket.OPEN) return;
 
-function isSynthetic(market) {
+ ws.send(JSON.stringify({
+  forget_all:"ticks"
+ }));
 
-    const category = [
+ ticks = [];
+ prices = [];
+ counts = Array(10).fill(0);
 
-        market.market,
+ renderDigits();
+ resetDisplay();
 
-        market.submarket,
-
-        market.subgroup,
-
-        market.underlying_symbol_type,
-
-        market.underlying_symbol_name
-
-    ].join(" ").toLowerCase();
-
-    return (
-
-        category.includes("synthetic") ||
-
-        category.includes("volatility") ||
-
-        category.includes("boom") ||
-
-        category.includes("crash") ||
-
-        category.includes("step") ||
-
-        category.includes("range break") ||
-
-        category.includes("jump") ||
-
-        category.includes("derived")
-
-    );
-
+ ws.send(JSON.stringify({
+  ticks_history:currentSymbol,
+  count:100,
+  end:"latest",
+  style:"ticks",
+  subscribe:1
+ }));
 }
 
-
-// ======================================
-// 7. RENDER MARKETS
-// ======================================
-
-function renderMarkets() {
-
-    const search =
-        document.getElementById("search")
-        .value.toLowerCase();
-
-    const filtered =
-        markets.filter(market => {
-
-            const name = String(
-
-                market.underlying_symbol_name ||
-
-                market.display_name ||
-
-                market.underlying_symbol ||
-
-                market.symbol ||
-
-                ""
-
-            );
-
-            return name.toLowerCase().includes(search);
-
-        });
-
-    marketList.innerHTML = "";
-
-    marketList.className = "market-grid";
-
-    if (filtered.length === 0) {
-
-        marketList.innerText =
-            "No matching synthetic markets found.";
-
-        return;
-
-    }
-
-    filtered.forEach(market => {
-
-        const symbol =
-            market.underlying_symbol ||
-            market.symbol;
-
-        const name =
-            market.underlying_symbol_name ||
-            market.display_name ||
-            symbol;
-
-        if (!symbol) return;
-
-        const item =
-            document.createElement("div");
-
-        item.className = "market-card";
-
-        if (symbol === selectedSymbol) {
-
-            item.classList.add("selected");
-
-        }
-
-        const title =
-            document.createElement("h3");
-
-        title.textContent = name;
-
-        const symbolText =
-            document.createElement("p");
-
-        symbolText.textContent = symbol;
-
-        const priceText =
-            document.createElement("p");
-
-        priceText.textContent =
-            marketPrices[symbol] !== undefined
-                ? "Price: " + marketPrices[symbol]
-                : "Waiting for price";
-
-        const prediction =
-            document.createElement("div");
-
-        prediction.className = "market-prediction";
-
-        if (marketLeaders[symbol] !== undefined) {
-
-            prediction.textContent =
-                "Historical leader: " +
-                marketLeaders[symbol];
-
-        } else {
-
-            prediction.textContent =
-                "Awaiting analysis";
-
-        }
-
-        item.appendChild(title);
-
-        item.appendChild(symbolText);
-
-        item.appendChild(priceText);
-
-        item.appendChild(prediction);
-
-        item.onclick = function() {
-
-            selector.value = symbol;
-
-            subscribeMarket(symbol);
-
-        };
-
-        marketList.appendChild(item);
-
-    });
-
+function resetDisplay(){
+ $("price").textContent = "--";
+ $("lastDigit").textContent = "--";
+ $("tickCount").textContent = "0";
+ $("candidate").textContent = "?";
+ $("confidence").textContent = "0%";
+ $("signal").textContent = "COLLECTING DATA";
 }
 
+function receiveTick(tick){
 
-// ======================================
-// 8. POPULATE MARKET SELECTOR
-// ======================================
+ if(!tick || !tick.quote) return;
 
-function populateMarkets() {
+ const quote = Number(tick.quote);
+ const priceString = String(tick.quote);
+ const digit = Number(priceString.replace(".","").slice(-1));
 
-    selector.innerHTML = "";
+ prices.push(quote);
+ prices = prices.slice(-200);
 
-    markets.forEach(market => {
+ ticks.push({
+  price:quote,
+  digit:digit,
+  time:tick.epoch
+ });
 
-        const symbol =
-            market.underlying_symbol ||
-            market.symbol;
+ ticks = ticks.slice(-200);
 
-        const name =
-            market.underlying_symbol_name ||
-            market.display_name ||
-            symbol;
+ $("price").textContent = tick.quote;
+ $("lastDigit").textContent = digit;
+ $("tickCount").textContent = ticks.length;
 
-        if (!symbol) return;
+ updateMovement();
+ analyse();
+ updateChart();
 
-        const option =
-            document.createElement("option");
-
-        option.value = symbol;
-
-        option.textContent = name;
-
-        selector.appendChild(option);
-
-    });
-
-    renderMarkets();
-
-    if (selector.options.length > 0) {
-
-        selector.selectedIndex = 0;
-
-        subscribeMarket(selector.value);
-
-    }
-
+ if(ticks.length % 10 === 0){
+  automaticScan();
+ }
 }
 
+function updateMovement(){
 
-// ======================================
-// 9. SELECT MARKET
-// ======================================
+ if(ticks.length < 2) return;
 
-function subscribeMarket(symbol) {
+ const last = ticks[ticks.length-1].price;
+ const previous = ticks[ticks.length-2].price;
 
-    if (!symbol) return;
+ let direction = "→ SIDEWAYS";
+ let color = "yellow";
 
-    if (tickSubscriptionId) {
+ if(last > previous){
+  direction = "↑ UP";
+  color = "green";
+ }
 
-        sendRequest({
-            forget: tickSubscriptionId
-        });
+ if(last < previous){
+  direction = "↓ DOWN";
+  color = "red";
+ }
 
-        tickSubscriptionId = null;
-
-    }
-
-    selectedSymbol = symbol;
-
-    previousPrice = null;
-
-    currentCandle = null;
-
-    candleSeries.setData([]);
-
-    document.getElementById("price").innerText =
-        "---";
-
-    document.getElementById("selected-name").innerText =
-        symbol;
-
-    document.getElementById("movement").innerText =
-        "Waiting for live prices...";
-
-    document.getElementById("paper-status").innerText =
-        "Waiting for paper test.";
-
-    document.getElementById("contract-analysis").innerText =
-        "Selected market: " + symbol +
-        ". Run a scan to view its statistics.";
-
-    sendRequest({
-
-        ticks: symbol,
-
-        subscribe: 1
-
-    });
-
-    sendRequest({
-
-        ticks_history: symbol,
-
-        count: 500,
-
-        end: "latest",
-
-        style: "ticks",
-
-        passthrough: {
-            purpose: "chart_history"
-        }
-
-    });
-
-    renderMarkets();
-
-    setTimeout(function() {
-
-        const contractSection =
-            document.getElementById("contract-section");
-
-        const position =
-            contractSection.getBoundingClientRect().top +
-            window.scrollY - 80;
-
-        window.scrollTo({
-
-            top: position,
-
-            behavior: "smooth"
-
-        });
-
-    }, 500);
-
+ $("movement").textContent = direction;
+ $("movement").className = "value " + color;
 }
 
+function analyse(){
 
-// ======================================
-// 10. SELECT CONTRACT
-// ======================================
+ if(ticks.length < 10) return;
 
-function selectContract(contract) {
+ const recent = ticks.slice(-100);
 
-    selectedContract = contract;
+ counts = Array(10).fill(0);
 
-    const contracts = [
+ recent.forEach(t=>{
+  counts[t.digit]++;
+ });
 
-        "matches",
+ renderDigits();
 
-        "differs",
+ const sorted = counts
+  .map((count,digit)=>({digit,count}))
+  .sort((a,b)=>b.count-a.count);
 
-        "even",
+ const hot = sorted[0];
+ const cold = sorted[9];
 
-        "odd",
+ $("hotDigit").textContent = hot.digit;
+ $("coldDigit").textContent = cold.digit;
 
-        "over",
+ const total = recent.length;
+ const even = recent.filter(t=>t.digit%2===0).length;
+ const odd = total-even;
 
-        "under"
+ $("evenOdd").textContent =
+  "E " + even + " / O " + odd;
 
-    ];
+ $("candidate").textContent = hot.digit;
 
-    contracts.forEach(name => {
+ const frequency = (hot.count/total)*100;
 
-        const button =
-            document.getElementById(name + "-btn");
+ $("confidence").textContent =
+  frequency.toFixed(1)+"%";
 
-        button.classList.remove("active");
-
-        button.style.background = "#00d9a5";
-
-        button.style.color = "#101820";
-
-    });
-
-    const activeButton =
-        document.getElementById(contract + "-btn");
-
-    activeButton.classList.add("active");
-
-    activeButton.style.background = "#ffc857";
-
-    activeButton.style.color = "#101820";
-
-    updateContractAnalysis();
-
+ updatePredictions();
+ updateIndicators();
 }
 
+function renderDigits(){
 
-document.getElementById("matches-btn").onclick =
-    () => selectContract("matches");
+ const box = $("digits");
+ box.innerHTML = "";
 
-document.getElementById("differs-btn").onclick =
-    () => selectContract("differs");
+ const total = counts.reduce((a,b)=>a+b,0);
 
-document.getElementById("even-btn").onclick =
-    () => selectContract("even");
+ counts.forEach((count,digit)=>{
 
-document.getElementById("odd-btn").onclick =
-    () => selectContract("odd");
+  const percent = total ? (count/total*100).toFixed(1) : "0.0";
 
-document.getElementById("over-btn").onclick =
-    () => selectContract("over");
+  const div = document.createElement("div");
 
-document.getElementById("under-btn").onclick =
-    () => selectContract("under");
+  div.className = "digit";
 
-selectContract("matches");
+  if(ticks.length && ticks[ticks.length-1].digit===digit){
+   div.classList.add("active");
+  }
 
+  div.innerHTML =
+   digit + '<span class="percent">'+percent+'%</span>';
 
-// ======================================
-// 11. DIGIT EXTRACTION
-// ======================================
-
-function extractLastDigit(price, pipSize) {
-
-    const decimals =
-        Number.isInteger(Number(pipSize))
-            ? Number(pipSize)
-            : 2;
-
-    const formatted =
-        Number(price).toFixed(decimals);
-
-    const digitsOnly =
-        formatted.replace(/\D/g, "");
-
-    return Number(
-        digitsOnly.charAt(digitsOnly.length - 1)
-    );
-
+  box.appendChild(div);
+ });
 }
 
+function updatePredictions(){
 
-// ======================================
-// 12. RUN DIGIT SCAN
-// ======================================
+ const recent = ticks.slice(-30);
 
-function runDigitScan() {
+ if(recent.length < 10) return;
 
-    if (!selectedSymbol) {
+ const frequencies = Array(10).fill(0);
 
-        document.getElementById("scanner-status").innerText =
-            "Please select a market first.";
+ recent.forEach(t=>frequencies[t.digit]++);
 
-        return;
+ const ranked = frequencies
+  .map((count,digit)=>({digit,count}))
+  .sort((a,b)=>b.count-a.count);
 
-    }
+ $("nextTick").textContent = ranked[0].digit;
+ $("followingTick").textContent = ranked[1].digit;
 
-    const count =
-        Number(document.getElementById("scan-count").value);
+ const first = ticks[ticks.length-1].price;
+ const last = ticks[Math.max(0,ticks.length-10)].price;
 
-    document.getElementById("scanner-status").innerText =
-        "Scanning " + selectedSymbol + "...";
+ let direction = "SIDEWAYS";
 
-    document.getElementById("digit-results").innerHTML =
-        "Analysing historical digits...";
+ if(first>last) direction = "UP";
+ if(first<last) direction = "DOWN";
 
-    const sent = sendRequest({
-
-        ticks_history: selectedSymbol,
-
-        count: count,
-
-        end: "latest",
-
-        style: "ticks",
-
-        passthrough: {
-            purpose: "digit_scan"
-        }
-
-    });
-
-    if (!sent) {
-
-        document.getElementById("scanner-status").innerText =
-            "Not connected. Please wait for Deriv connection.";
-
-    }
-
+ $("futureDirection").textContent = direction;
 }
 
+function ema(data,period){
 
-// ======================================
-// 13. PROCESS DIGIT SCAN
-// ======================================
+ if(data.length<period) return null;
 
-function processDigitScan(data) {
+ const k = 2/(period+1);
 
-    const prices =
-        data.history.prices || [];
+ let value = data.slice(0,period)
+  .reduce((a,b)=>a+b,0)/period;
 
-    const pipSize =
-        Number(data.pip_size);
+ for(let i=period;i<data.length;i++){
+  value=data[i]*k+value*(1-k);
+ }
 
-    if (!prices.length || !Number.isFinite(pipSize)) {
-
-        document.getElementById("scanner-status").innerText =
-            "Insufficient historical data.";
-
-        return;
-
-    }
-
-    latestPipSize = pipSize;
-
-    const digits = Array(10).fill(0);
-
-    prices.forEach(price => {
-
-        const digit =
-            extractLastDigit(price, pipSize);
-
-        if (digit >= 0 && digit <= 9) {
-
-            digits[digit]++;
-
-        }
-
-    });
-
-    const total =
-        digits.reduce((a, b) => a + b, 0);
-
-    if (!total) return;
-
-    latestDigitCounts = digits;
-
-    latestTotal = total;
-
-    const percentages =
-        digits.map(count => (count / total) * 100);
-
-    const highestDigit =
-        digits.indexOf(Math.max(...digits));
-
-    candidateDigit = highestDigit;
-
-    marketLeaders[selectedSymbol] =
-        highestDigit;
-
-    renderMarkets();
-
-    // Candidate display
-
-    document.getElementById("candidate-digit").innerText =
-        highestDigit;
-
-    document.getElementById("candidate-frequency").innerText =
-        digits[highestDigit] +
-        " occurrences out of " +
-        total +
-        " ticks (" +
-        percentages[highestDigit].toFixed(2) +
-        "% observed).";
-
-    document.getElementById("confidence").innerText =
-        "Historical sample available. Predictive confidence has not been validated.";
-
-    // Digit frequency display
-
-    let resultsHTML = "";
-
-    digits.forEach((count, digit) => {
-
-        const percentage =
-            percentages[digit];
-
-        let movement = "";
-
-        if (previousDigitPercentages !== null) {
-
-            if (
-                percentage >
-                previousDigitPercentages[digit]
-            ) {
-
-                movement = " ↑";
-
-            } else if (
-                percentage <
-                previousDigitPercentages[digit]
-            ) {
-
-                movement = " ↓";
-
-            }
-
-        }
-
-        resultsHTML += `
-
-            <div class="metric">
-
-                <strong>
-                    ${digit === highestDigit ? "⭐ " : ""}
-                    Digit ${digit}
-                </strong>
-
-                <p>
-                    ${count} occurrences
-                    (${percentage.toFixed(2)}%)
-                    ${movement}
-                </p>
-
-                <div class="progress-track">
-
-                    <div
-                        class="progress-fill"
-                        style="width:${percentage}%"
-                    ></div>
-
-                </div>
-
-            </div>
-
-        `;
-
-    });
-
-    document.getElementById("digit-results").innerHTML =
-        resultsHTML;
-
-    previousDigitPercentages = percentages;
-
-    // Statistics
-
-    const even =
-        digits[0] + digits[2] + digits[4] +
-        digits[6] + digits[8];
-
-    const odd =
-        digits[1] + digits[3] + digits[5] +
-        digits[7] + digits[9];
-
-    const over =
-        digits[5] + digits[6] + digits[7] +
-        digits[8] + digits[9];
-
-    const under =
-        digits[0] + digits[1] + digits[2] +
-        digits[3] + digits[4];
-
-    const percentage = value =>
-        ((value / total) * 100).toFixed(2);
-
-    document.getElementById("digit-statistics").innerHTML = `
-
-        <div class="metric">
-            Total ticks: ${total}
-        </div>
-
-        <div class="metric">
-            Even: ${percentage(even)}%
-        </div>
-
-        <div class="metric">
-            Odd: ${percentage(odd)}%
-        </div>
-
-        <div class="metric">
-            Over 4: ${percentage(over)}%
-        </div>
-
-        <div class="metric">
-            Under 5: ${percentage(under)}%
-        </div>
-
-    `;
-
-    document.getElementById("digit-insights").innerHTML = `
-
-        <p>Most frequent historical digit: ${highestDigit}</p>
-
-        <p>
-            Observed frequency:
-            ${percentage(digits[highestDigit])}%
-        </p>
-
-        <p>
-            Sample size: ${total} ticks
-        </p>
-
-        <p>
-            This is descriptive analysis, not a
-            next-tick forecast.
-        </p>
-
-    `;
-
-    document.getElementById("scanner-status").innerText =
-        "Scan completed successfully.";
-
-    updateContractAnalysis();
-
+ return value;
 }
 
+function calculateRSI(data){
 
-// ======================================
-// 14. CONTRACT ANALYSIS
-// ======================================
+ if(data.length<15) return null;
 
-function updateContractAnalysis() {
+ let gains=0,losses=0;
 
-    if (!latestDigitCounts || !latestTotal) {
+ for(let i=data.length-14;i<data.length;i++){
 
-        document.getElementById("contract-analysis").innerText =
-            "Run a scan to view contract statistics.";
+  const change=data[i]-data[i-1];
 
-        return;
+  if(change>0) gains+=change;
+  else losses-=change;
+ }
 
-    }
+ if(losses===0) return 100;
 
-    const digits = latestDigitCounts;
+ const rs=(gains/14)/(losses/14);
 
-    const total = latestTotal;
-
-    const percent = value =>
-        ((value / total) * 100).toFixed(2);
-
-    const even =
-        digits[0] + digits[2] + digits[4] +
-        digits[6] + digits[8];
-
-    const odd =
-        digits[1] + digits[3] + digits[5] +
-        digits[7] + digits[9];
-
-    const over =
-        digits[5] + digits[6] + digits[7] +
-        digits[8] + digits[9];
-
-    const under =
-        digits[0] + digits[1] + digits[2] +
-        digits[3] + digits[4];
-
-    const matches =
-        digits[candidateDigit];
-
-    const differs =
-        total - matches;
-
-    let selectedText = "";
-
-    if (selectedContract === "matches") {
-
-        selectedText =
-            "Matches digit " + candidateDigit +
-            ": " + percent(matches) + "% observed.";
-
-    }
-
-    if (selectedContract === "differs") {
-
-        selectedText =
-            "Differs from digit " + candidateDigit +
-            ": " + percent(differs) + "% observed.";
-
-    }
-
-    if (selectedContract === "even") {
-
-        selectedText =
-            "Even: " + percent(even) + "% observed.";
-
-    }
-
-    if (selectedContract === "odd") {
-
-        selectedText =
-            "Odd: " + percent(odd) + "% observed.";
-
-    }
-
-    if (selectedContract === "over") {
-
-        selectedText =
-            "Over 4: " + percent(over) + "% observed.";
-
-    }
-
-    if (selectedContract === "under") {
-
-        selectedText =
-            "Under 5: " + percent(under) + "% observed.";
-
-    }
-
-    document.getElementById("contract-analysis").innerHTML = `
-
-        <h3>Selected: ${selectedContract.toUpperCase()}</h3>
-
-        <div class="metric">
-            ${selectedText}
-        </div>
-
-        <div class="metric">
-            Matches digit ${candidateDigit}:
-            ${percent(matches)}%
-        </div>
-
-        <div class="metric">
-            Differs:
-            ${percent(differs)}%
-        </div>
-
-        <div class="metric">
-            Even:
-            ${percent(even)}%
-        </div>
-
-        <div class="metric">
-            Odd:
-            ${percent(odd)}%
-        </div>
-
-        <div class="metric">
-            Over 4:
-            ${percent(over)}%
-        </div>
-
-        <div class="metric">
-            Under 5:
-            ${percent(under)}%
-        </div>
-
-        <p class="small-note">
-            These percentages describe historical
-            observations, not guaranteed future outcomes.
-        </p>
-
-    `;
-
+ return 100-(100/(1+rs));
 }
 
+function updateIndicators(){
 
-// ======================================
-// 15. HISTORICAL CHART
-// ======================================
+ const e9=ema(prices,9);
+ const e21=ema(prices,21);
+ const r=calculateRSI(prices);
 
-function processChartHistory(data) {
+ if(e9===null || e21===null || r===null) return;
 
-    if (!data.history) return;
+ $("ema9").textContent=e9.toFixed(4);
+ $("ema21").textContent=e21.toFixed(4);
+ $("rsi").textContent=r.toFixed(1);
 
-    const prices =
-        data.history.prices || [];
+ let signal="WAIT";
+ let color="yellow";
 
-    const times =
-        data.history.times || [];
+ if(e9>e21 && r>50 && r<70){
+  signal="BULLISH";
+  color="green";
+ }
 
-    if (!prices.length || !times.length) return;
+ if(e9<e21 && r<50 && r>30){
+  signal="BEARISH";
+  color="red";
+ }
 
-    const candles = {};
+ $("signal").textContent=signal;
+ $("signal").className="signal "+color;
 
-    for (let i = 0; i < prices.length; i++) {
-
-        const time =
-            Math.floor(times[i] / 60) * 60;
-
-        const price =
-            Number(prices[i]);
-
-        if (!Number.isFinite(price)) continue;
-
-        if (!candles[time]) {
-
-            candles[time] = {
-
-                time: time,
-
-                open: price,
-
-                high: price,
-
-                low: price,
-
-                close: price
-
-            };
-
-        } else {
-
-            candles[time].high =
-                Math.max(candles[time].high, price);
-
-            candles[time].low =
-                Math.min(candles[time].low, price);
-
-            candles[time].close =
-                price;
-
-        }
-
-    }
-
-    const candleData =
-        Object.values(candles).sort(
-            (a, b) => a.time - b.time
-        );
-
-    candleSeries.setData(candleData);
-
-    currentCandle =
-        candleData.length
-            ? { ...candleData[candleData.length - 1] }
-            : null;
-
+ $("trend").textContent=signal;
+ $("trend").className="value "+color;
 }
 
+function automaticScan(){
 
-// ======================================
-// 16. LIVE CANDLE UPDATES
-// ======================================
+ if(ticks.length<20) return;
 
-function updateLiveCandle(quote, epoch) {
+ const recent=ticks.slice(-100);
 
-    const tickTime =
-        Math.floor(epoch / 60) * 60;
+ const frequency=Math.max(...counts)/recent.length*100;
 
-    if (!currentCandle || tickTime > currentCandle.time) {
+ const digit=counts.indexOf(Math.max(...counts));
 
-        currentCandle = {
+ const signal=$("signal").textContent;
 
-            time: tickTime,
+ const item={
+  time:new Date().toLocaleTimeString(),
+  digit:digit,
+  frequency:frequency.toFixed(1),
+  signal:signal
+ };
 
-            open: quote,
+ scanHistory.unshift(item);
+ scanHistory=scanHistory.slice(0,10);
 
-            high: quote,
-
-            low: quote,
-
-            close: quote
-
-        };
-
-        candleSeries.update(currentCandle);
-
-    } else if (tickTime === currentCandle.time) {
-
-        currentCandle.high =
-            Math.max(currentCandle.high, quote);
-
-        currentCandle.low =
-            Math.min(currentCandle.low, quote);
-
-        currentCandle.close = quote;
-
-        candleSeries.update(currentCandle);
-
-    }
-
+ renderHistory();
 }
 
+function renderHistory(){
 
-// ======================================
-// 17. START PAPER TEST
-// ======================================
+ $("history").innerHTML="";
 
-document.getElementById("start-paper-test")
-.addEventListener("click", function() {
+ scanHistory.forEach(item=>{
 
-    if (!selectedSymbol) {
+  const row=document.createElement("tr");
 
-        document.getElementById("paper-status").innerText =
-            "Select a market first.";
+  [item.time,item.digit,item.frequency+"%",item.signal]
+   .forEach(value=>{
+    const td=document.createElement("td");
+    td.textContent=value;
+    row.appendChild(td);
+   });
 
-        return;
-
-    }
-
-    if (
-        (selectedContract === "matches" ||
-         selectedContract === "differs") &&
-        candidateDigit === null
-    ) {
-
-        document.getElementById("paper-status").innerText =
-            "Run a digit scan first.";
-
-        return;
-
-    }
-
-    if (paperTest !== null) {
-
-        document.getElementById("paper-status").innerText =
-            "A paper test is already running.";
-
-        return;
-
-    }
-
-    const expiry =
-        Number(document.getElementById("expiry-ticks").value);
-
-    paperTest = {
-
-        market: selectedSymbol,
-
-        contract: selectedContract,
-
-        candidateDigit: candidateDigit,
-
-        expiryTicks: expiry,
-
-        remainingTicks: expiry
-
-    };
-
-    document.getElementById("paper-status").innerText =
-
-        "Paper test running: " +
-        selectedContract.toUpperCase() +
-        ". Waiting for " +
-        expiry +
-        " ticks.";
-
-});
-
-
-// ======================================
-// 18. CHECK PAPER TEST RESULT
-// ======================================
-
-function processPaperTest(digit) {
-
-    if (!paperTest) return;
-
-    if (paperTest.market !== selectedSymbol) return;
-
-    paperTest.remainingTicks--;
-
-    document.getElementById("paper-status").innerText =
-
-        "Test running. Remaining ticks: " +
-        paperTest.remainingTicks;
-
-    if (paperTest.remainingTicks > 0) return;
-
-    let won = false;
-
-    if (paperTest.contract === "matches") {
-
-        won = digit === paperTest.candidateDigit;
-
-    }
-
-    if (paperTest.contract === "differs") {
-
-        won = digit !== paperTest.candidateDigit;
-
-    }
-
-    if (paperTest.contract === "even") {
-
-        won = digit % 2 === 0;
-
-    }
-
-    if (paperTest.contract === "odd") {
-
-        won = digit % 2 !== 0;
-
-    }
-
-    if (paperTest.contract === "over") {
-
-        won = digit > 4;
-
-    }
-
-    if (paperTest.contract === "under") {
-
-        won = digit < 5;
-
-    }
-
-    const result = {
-
-        market: paperTest.market,
-
-        contract: paperTest.contract,
-
-        candidateDigit: paperTest.candidateDigit,
-
-        finalDigit: digit,
-
-        expiryTicks: paperTest.expiryTicks,
-
-        won: won,
-
-        date: new Date().toLocaleString()
-
-    };
-
-    paperHistory.unshift(result);
-
-    paperHistory =
-        paperHistory.slice(0, 50);
-
-    try {
-
-        localStorage.setItem(
-            "derivPaperHistory",
-            JSON.stringify(paperHistory)
-        );
-
-    } catch (error) {
-
-        console.error("Could not save paper history:", error);
-
-    }
-
-    paperTest = null;
-
-    document.getElementById("paper-status").innerHTML = won
-
-        ? '<span class="result-win">PAPER TEST RESULT: WIN</span>'
-
-        : '<span class="result-loss">PAPER TEST RESULT: LOSS</span>';
-
-    renderPaperHistory();
-
+  $("history").appendChild(row);
+ });
 }
 
+function updateChart(){
 
-// ======================================
-// 19. PAPER TEST HISTORY
-// ======================================
+ const canvas=$("chart");
+ const ctx=canvas.getContext("2d");
 
-function renderPaperHistory() {
+ const ratio=window.devicePixelRatio||1;
+ const width=canvas.clientWidth;
+ const height=220;
 
-    const wins =
-        paperHistory.filter(item => item.won).length;
+ canvas.width=width*ratio;
+ canvas.height=height*ratio;
 
-    const losses =
-        paperHistory.filter(item => !item.won).length;
+ ctx.scale(ratio,ratio);
 
-    const total =
-        paperHistory.length;
+ ctx.clearRect(0,0,width,height);
 
-    const winRate =
-        total
-            ? ((wins / total) * 100).toFixed(2)
-            : "0.00";
+ if(prices.length<2) return;
 
-    document.getElementById("paper-summary").innerHTML = `
+ const data=prices.slice(-100);
 
-        <div class="metric">
-            Total tests: ${total}
-        </div>
+ const min=Math.min(...data);
+ const max=Math.max(...data);
+ const range=max-min||1;
 
-        <div class="metric">
-            Wins: ${wins}
-        </div>
+ ctx.beginPath();
+ ctx.strokeStyle="#00d99a";
+ ctx.lineWidth=2;
 
-        <div class="metric">
-            Losses: ${losses}
-        </div>
+ data.forEach((price,i)=>{
 
-        <div class="metric">
-            Win rate: ${winRate}%
-        </div>
+  const x=i/(data.length-1)*width;
+  const y=height-((price-min)/range)*(height-25)-12;
 
-    `;
+  if(i===0)ctx.moveTo(x,y);
+  else ctx.lineTo(x,y);
+ });
 
-    if (!total) {
-
-        document.getElementById("paper-history").innerText =
-            "No results yet.";
-
-        return;
-
-    }
-
-    let html = "";
-
-    paperHistory.forEach(item => {
-
-        html += `
-
-            <div class="metric">
-
-                <strong>${item.market}</strong>
-
-                <p>
-                    ${item.contract.toUpperCase()}
-                </p>
-
-                <p>
-                    Final digit: ${item.finalDigit}
-                </p>
-
-                <p>
-                    ${item.won
-                        ? '<span class="result-win">WIN</span>'
-                        : '<span class="result-loss">LOSS</span>'}
-                </p>
-
-                <p class="small-note">
-                    ${item.date}
-                </p>
-
-            </div>
-
-        `;
-
-    });
-
-    document.getElementById("paper-history").innerHTML =
-        html;
-
+ ctx.stroke();
 }
 
+function automaticRefresh(){
 
-// ======================================
-// 20. HANDLE LIVE TICKS
-// ======================================
+ clearInterval(scanTimer);
 
-function processLiveTick(data) {
-
-    if (!data.tick) return;
-
-    const tick = data.tick;
-
-    if (tick.symbol !== selectedSymbol) return;
-
-    if (data.subscription) {
-
-        tickSubscriptionId =
-            data.subscription.id;
-
-    }
-
-    const quote =
-        Number(tick.quote);
-
-    const epoch =
-        Number(tick.epoch);
-
-    const pipSize =
-        Number(tick.pip_size);
-
-    if (!Number.isFinite(quote)) return;
-
-    marketPrices[selectedSymbol] = quote;
-
-    document.getElementById("price").innerText =
-        quote.toFixed(
-            Number.isInteger(pipSize) ? pipSize : 2
-        );
-
-    let movement = "First price received";
-
-    if (previousPrice !== null) {
-
-        if (quote > previousPrice) {
-
-            movement = "Price moving UP ↑";
-
-        } else if (quote < previousPrice) {
-
-            movement = "Price moving DOWN ↓";
-
-        } else {
-
-            movement = "Price unchanged";
-
-        }
-
-    }
-
-    document.getElementById("movement").innerText =
-        movement;
-
-    previousPrice = quote;
-
-    updateLiveCandle(quote, epoch);
-
-    if (Number.isFinite(pipSize)) {
-
-        const digit =
-            extractLastDigit(quote, pipSize);
-
-        processPaperTest(digit);
-
-    }
-
-    renderMarkets();
-
+ scanTimer=setInterval(()=>{
+  if(ticks.length>=20){
+   automaticScan();
+  }
+ },30000);
 }
 
-
-// ======================================
-// 21. HANDLE DERIV MESSAGES
-// ======================================
-
-function handleMessage(event) {
-
-    let data;
-
-    try {
-
-        data = JSON.parse(event.data);
-
-    } catch (error) {
-
-        connectionInfo.innerText =
-            "Could not read Deriv response.";
-
-        return;
-
-    }
-
-    if (data.error) {
-
-        statusBox.innerText =
-            "API Error: " + data.error.message;
-
-        connectionInfo.innerText =
-            data.error.message;
-
-        return;
-
-    }
-
-    // Available markets
-
-    if (data.msg_type === "active_symbols") {
-
-        const allMarkets =
-            data.active_symbols || [];
-
-        markets =
-            allMarkets.filter(isSynthetic);
-
-        marketCount.innerText =
-            markets.length +
-            " synthetic markets discovered";
-
-        connectionInfo.innerText =
-            "Received " +
-            allMarkets.length +
-            " active markets.";
-
-        if (markets.length > 0) {
-
-            statusBox.innerText =
-                "Connected - Markets loaded";
-
-            populateMarkets();
-
-        } else {
-
-            statusBox.innerText =
-                "Connected - No synthetic markets identified";
-
-            marketList.innerText =
-                "No synthetic markets were returned.";
-
-            connectionInfo.innerText =
-                "Received " + allMarkets.length +
-                " markets. Synthetic filtering needs checking.";
-
-        }
-
-        return;
-
-    }
-
-    // Historical ticks
-
-    if (data.msg_type === "history" && data.history) {
-
-        const purpose =
-            data.echo_req &&
-            data.echo_req.passthrough
-                ? data.echo_req.passthrough.purpose
-                : "";
-
-        if (purpose === "digit_scan") {
-
-            processDigitScan(data);
-
-        }
-
-        if (purpose === "chart_history") {
-
-            processChartHistory(data);
-
-        }
-
-        return;
-
-    }
-
-    // Live prices
-
-    if (data.msg_type === "tick") {
-
-        processLiveTick(data);
-
-    }
-
-}
-
-
-// ======================================
-// 22. CONNECT TO DERIV
-// ======================================
-
-function connect() {
-
-    clearTimeout(reconnectTimer);
-
-    statusBox.innerText =
-        "Connecting to Deriv...";
-
-    connectionInfo.innerText =
-        "Opening public market-data connection.";
-
-    try {
-
-        socket = new WebSocket(WS_URL);
-
-    } catch (error) {
-
-        statusBox.innerText =
-            "Connection could not start.";
-
-        connectionInfo.innerText =
-            error.message;
-
-        scheduleReconnect();
-
-        return;
-
-    }
-
-    socket.onopen = function() {
-
-        statusBox.innerText =
-            "Connected - Discovering markets";
-
-        connectionInfo.innerText =
-            "WebSocket connection established.";
-
-        reconnectDelay = 2000;
-
-        sendRequest({
-
-            active_symbols: "full"
-
-        });
-
-    };
-
-    socket.onmessage = handleMessage;
-
-    socket.onerror = function() {
-
-        statusBox.innerText =
-            "Connection error";
-
-        connectionInfo.innerText =
-            "The browser reported a WebSocket error.";
-
-    };
-
-    socket.onclose = function(event) {
-
-        statusBox.innerText =
-            "Disconnected - Reconnecting...";
-
-        connectionInfo.innerText =
-            "Connection closed. Code: " +
-            event.code;
-
-        tickSubscriptionId = null;
-
-        scheduleReconnect();
-
-    };
-
-}
-
-
-// ======================================
-// 23. RECONNECT
-// ======================================
-
-function scheduleReconnect() {
-
-    clearTimeout(reconnectTimer);
-
-    reconnectTimer = setTimeout(function() {
-
-        connect();
-
-    }, reconnectDelay);
-
-    reconnectDelay = Math.min(
-        reconnectDelay * 2,
-        30000
-    );
-
-}
-
-
-// ======================================
-// 24. EVENT LISTENERS
-// ======================================
-
-selector.addEventListener("change", function() {
-
-    subscribeMarket(this.value);
-
-});
-
-document.getElementById("search")
-.addEventListener("input", renderMarkets);
-
-
-// ======================================
-// 25. START APPLICATION
-// ======================================
-
-renderPaperHistory();
-
-connect();
-
-</script>
-
-</body>
-</html>   
+$("scanButton").addEventListener("click",()=>
