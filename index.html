@@ -4,37 +4,29 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Deriv Market Analyser</title>
-/* -------- PREMIUM LAST DIGIT DISPLAY -------- */
+<style>
+ /* -------- PREMIUM LAST DIGIT DISPLAY -------- */
 
 #lastDigit {
- display:inline-flex;
- align-items:center;
- justify-content:center;
- width:110px;
- height:110px;
- border-radius:25px;
- font-size:65px !important;
- font-weight:900;
- color:#ffffff !important;
- background:linear-gradient(135deg,#7b2ff7,#f107a3,#ff8c00);
- box-shadow:
-  0 0 15px rgba(241,7,163,.6),
-  0 0 35px rgba(123,47,247,.4);
- border:2px solid rgba(255,255,255,.4);
- text-shadow:0 3px 12px #0008;
- transition:all .25s ease;
- animation:digitGlow 2s infinite alternate;
+    font-size: 52px;
+    font-weight: 900;
+    color: #00e5ff;
+    text-shadow:
+        0 0 8px #00e5ff,
+        0 0 18px #00e5ff,
+        0 0 35px rgba(0,229,255,0.8);
+    animation: digitGlow 1.5s infinite alternate;
 }
 
 @keyframes digitGlow {
- from {
-  box-shadow:0 0 12px #7b2ff7;
- }
- to {
-  box-shadow:0 0 30px #f107a3,0 0 45px #ff8c00;
- }
+    from {
+        text-shadow: 0 0 8px #00e5ff;
+    }
+    to {
+        text-shadow: 0 0 25px #00e5ff,
+                     0 0 45px #00e5ff;
+    }
 }
-<style>
 *{box-sizing:border-box;margin:0;padding:0}
 
 body{
@@ -923,7 +915,6 @@ function buildPredictionModel(){
  };
 
 }
-function analyse(){
 
 /* ---------------- INTELLIGENT ANALYSIS ---------------- */
 
@@ -1132,9 +1123,20 @@ function renderMarketIntelligence(){
  `;
 
 }
+ panel.innerHTML = html;
+
+}
+
+updatePredictions();
+
+updateIndicators();
+
+renderMarketIntelligence();
+
 }
 
 /* ---------------- DIGIT DISPLAY ---------------- */
+
 
 function renderDigits(){
 
@@ -1936,7 +1938,7 @@ function renderMarketIntelligence(){
   </small>
  `;
 
-}
+
 /* ---------------- INITIALISE ---------------- */
 
 renderDigits();
