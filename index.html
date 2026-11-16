@@ -115,18 +115,27 @@ footer {
 }
     <style>
 .contract-slider {
-    display: flex;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
     gap: 12px;
-    overflow-x: auto;
-    white-space: nowrap;
+    width: 100%;
+    overflow-x: auto !important;
+    overflow-y: hidden;
+    white-space: normal;
     padding: 12px 5px;
+    box-sizing: border-box;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
 }
 
-.contract-slider .card {
-    flex: 0 0 85%;
+.contract-slider > .card {
+    display: block;
+    flex: 0 0 85% !important;
+    width: 85%;
     min-width: 85%;
+    box-sizing: border-box;
     scroll-snap-align: start;
 }
 
