@@ -786,10 +786,150 @@ function updateMovement(){
 
 
 /* ---------------- DIGIT ANALYSIS ---------------- */
+/* =====================================
+   INTELLIGENT PREDICTION ENGINE
+===================================== */
+
+function buildPredictionModel(){
+
+ if(ticks.length < 30) return null;
+
+ const windows = [30,100,200];
+
+ const models = {};
+
+ windows.forEach(size=>{
+
+  const sample = ticks.slice(-size);
+
+  const frequencies = Array(10).fill(0);
+
+  sample.forEach(t=>{
+   frequencies[t.digit]++;
+  });
+
+  const total = sample.length;
+
+  // Smoothed historical probabilities
+  const probabilities = frequencies.map(count=>
+   ((count+1)/(total+10))*100
+  );
+
+  const ranked = probabilities
+   .map((probability,digit)=>({
+    digit,
+    probability
+   }))
+   .sort((a,b)=>b.probability-a.probability);
+
+  models[size] = {
+   frequencies,
+   probabilities,
+   ranked,
+   total
+  };
+
+ });
+
+ // Sequential transition analysis
+
+ const transitions = Array.from(
+  {length:10},
+  ()=>Array(10).fill(0)
+ );
+
+ for(let i=1;i<ticks.length;i++){
+
+  const previous = ticks[i-1].digit;
+  const current = ticks[i].digit;
+
+  transitions[previous][current]++;
+
+ }
+
+ const previousDigit = ticks[ticks.length-1].digit;
+
+ const transitionRow = transitions[previousDigit];
+
+ const transitionTotal = transitionRow.reduce(
+  (a,b)=>a+b,0
+ );
+
+ const transitionProbabilities = transitionRow.map(
+  count=>((count+1)/(transitionTotal+10))*100
+ );
+
+ // Combine historical and sequential information
+
+ const longTerm = models[200] || models[100];
+ const shortTerm = models[30];
+
+ const combined = [];
+
+ for(let digit=0;digit<10;digit++){
+
+  let probability =
+   longTerm.probabilities[digit]*0.60+
+   shortTerm.probabilities[digit]*0.25;
+
+  // Give sequential information limited influence
+  if(transitionTotal >= 30){
+
+   probability =
+    probability*0.80+
+    transitionProbabilities[digit]*0.20;
+
+  }
+
+  combined.push({
+   digit,
+   probability
+  });
+
+ }
+
+ combined.sort((a,b)=>
+  b.probability-a.probability
+ );
+
+ // Compare the leading candidates across windows
+
+ const leaders = windows.map(size=>
+  models[size].ranked[0].digit
+ );
+
+ const agreement = {};
+
+ leaders.forEach(digit=>{
+  agreement[digit]=(agreement[digit]||0)+1;
+ });
+
+ const topDigit = combined[0].digit;
+
+ const agreementScore =
+  ((agreement[topDigit]||0)/leaders.length)*100;
+
+ return {
+
+  models,
+  transitions,
+  transitionTotal,
+  previousDigit,
+  combined,
+  topDigit,
+  topThree:combined.slice(0,3),
+  agreementScore
+
+ };
+
+}
+function analyse(){
+
+/* ---------------- INTELLIGENT ANALYSIS ---------------- */
 
 function analyse(){
 
- if(ticks.length < 10) return;
+ if(ticks.length < 30) return;
 
  const recent = ticks.slice(-100);
 
@@ -819,17 +959,180 @@ function analyse(){
  $("evenOdd").textContent =
   "E " + even + " / O " + odd;
 
- $("candidate").textContent = hot.digit;
+ const model = buildPredictionModel();
+
+ if(!model) return;
+
+ $("candidate").textContent =
+  model.topDigit;
 
  $("confidence").textContent =
-  ((hot.count/total)*100).toFixed(1)+"%";
+  model.agreementScore.toFixed(1)+"%";
 
- updatePredictions();
+ /* =====================================
+   MARKET CONDITION ENGINE
+===================================== */
 
- updateIndicators();
+function analyseMarketCondition(){
+
+ if(ticks.length < 30) return null;
+
+ const recent = ticks.slice(-30);
+
+ const values = recent.map(t=>t.price);
+
+ const changes = [];
+
+ for(let i=1;i<values.length;i++){
+  changes.push(values[i]-values[i-1]);
+ }
+
+ const average =
+  changes.reduce((a,b)=>a+b,0)/changes.length;
+
+ const variance =
+  changes.reduce((sum,x)=>sum+Math.pow(x-average,2),0)
+  /changes.length;
+
+ const volatility = Math.sqrt(variance);
+
+ const upward = changes.filter(x=>x>0).length;
+ const downward = changes.filter(x=>x<0).length;
+
+ const movement = Math.abs(values.at(-1)-values[0]);
+
+ let condition = "RANGING";
+
+ if(volatility > 0 && movement > volatility*5){
+  condition = "TRENDING";
+ }
+
+ if(volatility > Math.abs(average)*2 && volatility > 0){
+  condition = "VOLATILE";
+ }
+
+ let direction = "SIDEWAYS";
+
+ if(upward > downward) direction = "UP";
+ if(downward > upward) direction = "DOWN";
+
+ return {
+  condition,
+  direction,
+  volatility,
+  upward,
+  downward
+ };
 
 }
 
+
+/* =====================================
+   OVERDUE DIGIT ANALYSIS
+===================================== */
+
+function getOverdueDigits(){
+
+ const lastSeen = Array(10).fill(-1);
+
+ ticks.forEach((tick,index)=>{
+  lastSeen[tick.digit] = index;
+ });
+
+ return lastSeen
+  .map((index,digit)=>({
+   digit,
+   overdue:index === -1
+    ? ticks.length
+    : ticks.length-1-index
+  }))
+  .sort((a,b)=>b.overdue-a.overdue);
+
+}
+
+
+/* =====================================
+   MARKET INTELLIGENCE DISPLAY
+===================================== */
+
+function renderMarketIntelligence(){
+
+ const market = analyseMarketCondition();
+
+ if(!market) return;
+
+ let panel = document.getElementById("marketIntel");
+
+ if(!panel){
+
+  panel = document.createElement("section");
+  panel.id = "marketIntel";
+
+  panel.style.cssText = `
+   background:#111827;
+   border:1px solid #344054;
+   border-radius:15px;
+   padding:18px;
+   margin:18px 0;
+   color:white;
+  `;
+
+  const prediction = document.getElementById("predictionPanel");
+
+  if(prediction){
+   prediction.insertAdjacentElement("afterend",panel);
+  }else{
+   document.body.appendChild(panel);
+  }
+
+ }
+
+ const overdue = getOverdueDigits();
+
+ panel.innerHTML = `
+  <h2 style="color:#58d6ff;margin-top:0">
+   MARKET INTELLIGENCE
+  </h2>
+
+  <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+
+   <div style="background:#202d43;padding:13px;border-radius:10px">
+    <small>MARKET CONDITION</small>
+    <h3>${market.condition}</h3>
+   </div>
+
+   <div style="background:#202d43;padding:13px;border-radius:10px">
+    <small>PRICE DIRECTION</small>
+    <h3>${market.direction}</h3>
+   </div>
+
+   <div style="background:#202d43;padding:13px;border-radius:10px">
+    <small>UPWARD TICKS</small>
+    <h3>${market.upward}</h3>
+   </div>
+
+   <div style="background:#202d43;padding:13px;border-radius:10px">
+    <small>DOWNWARD TICKS</small>
+    <h3>${market.downward}</h3>
+   </div>
+
+  </div>
+
+  <h3>OVERDUE DIGITS</h3>
+
+  <p style="color:#aab5c5">
+   ${overdue.slice(0,3).map(x=>
+    "Digit "+x.digit+" ("+x.overdue+" ticks)"
+   ).join(" | ")}
+  </p>
+
+  <small style="color:#aab5c5">
+   Overdue does not mean a digit is more likely to appear next.
+  </small>
+ `;
+
+}
+}
 
 /* ---------------- DIGIT DISPLAY ---------------- */
 
@@ -881,26 +1184,13 @@ function renderDigits(){
 }
 
 
-/* ---------------- EXPERIMENTAL ESTIMATES ---------------- */
+/* ---------------- INTELLIGENT PREDICTIONS ---------------- */
 
 function updatePredictions(){
 
- const recent = ticks.slice(-30);
+ const model = buildPredictionModel();
 
- if(recent.length < 10) return;
-
- const frequencies = Array(10).fill(0);
-
- recent.forEach(t=>{
-  frequencies[t.digit]++;
- });
-
- const ranked = frequencies
-  .map((count,digit)=>({digit,count}))
-  .sort((a,b)=>b.count-a.count);
-
- $("nextTick").textContent = ranked[0].digit;
- $("followingTick").textContent = ranked[1].digit;
+ if(!model) return;
 
  const first = ticks[ticks.length-1].price;
  const last = ticks[Math.max(0,ticks.length-10)].price;
@@ -912,8 +1202,23 @@ function updatePredictions(){
 
  $("futureDirection").textContent = direction;
 
-}
+ $("nextTick").textContent =
+  model.topThree[0].digit;
 
+ $("followingTick").textContent =
+  model.topThree[1].digit;
+
+ const candidates = model.topThree;
+
+ const signal =
+  model.agreementScore >= 50
+   ? "QUALIFIED WATCH"
+   : "NO QUALIFIED SIGNAL";
+
+ $("signal").textContent = signal;
+ renderPredictionPanel(model);
+
+}
 
 /* ---------------- EMA CALCULATION ---------------- */
 
@@ -1004,41 +1309,48 @@ function updateIndicators(){
 }
 
 
-/* ---------------- AUTOMATIC SCANNING ---------------- */
+/* ---------------- INTELLIGENT AUTO SCAN ---------------- */
 
 function automaticScan(){
 
- if(ticks.length < 20) return;
+ if(ticks.length < 30) return;
 
- const recent = ticks.slice(-100);
+ const model = buildPredictionModel();
 
- const total = recent.length;
+ if(!model) return;
 
- const maximum = Math.max(...counts);
+ const candidate = model.topThree[0];
 
- const digit = counts.indexOf(maximum);
+ const agreement = model.agreementScore;
 
- const frequency = (maximum/total)*100;
-
- const signal = $("signal").textContent;
+ const qualified = agreement >= 50;
 
  const item = {
 
-  time: new Date().toLocaleTimeString(),
-  digit: digit,
-  frequency: frequency.toFixed(1),
-  signal: signal
+  time:new Date().toLocaleTimeString(),
+
+  digit:candidate.digit,
+
+  frequency:candidate.probability.toFixed(1),
+
+  signal:qualified
+   ? "QUALIFIED WATCH"
+   : "NO QUALIFIED SIGNAL"
 
  };
 
  scanHistory.unshift(item);
 
- scanHistory = scanHistory.slice(0,10);
+ scanHistory=scanHistory.slice(0,10);
 
  renderHistory();
 
-}
+ $("signal").textContent =
+  qualified
+   ? "QUALIFIED WATCH"
+   : "NO QUALIFIED SIGNAL";
 
+}
 
 /* ---------------- SCAN HISTORY ---------------- */
 
@@ -1273,6 +1585,356 @@ function startDemoMode(){
  demoTimer = setInterval(generateDemoTick,1000);
 
  console.log("Demo mode started");
+
+}
+ /* =====================================
+   ADVANCED PREDICTION DISPLAY
+===================================== */
+
+function renderPredictionPanel(model){
+
+ let panel = document.getElementById("predictionPanel");
+
+ if(!panel){
+
+  panel = document.createElement("section");
+
+  panel.id = "predictionPanel";
+
+  panel.style.cssText = `
+   background:#111827;
+   border:1px solid #344054;
+   border-radius:16px;
+   padding:18px;
+   margin:20px 0;
+   color:white;
+   width:100%;
+   box-sizing:border-box;
+  `;
+
+  const candidate = document.getElementById("candidate");
+
+  const container = candidate
+   ? candidate.parentElement.parentElement
+   : null;
+
+  if(container && container.parentElement){
+   container.insertAdjacentElement("afterend",panel);
+  }else{
+   document.body.appendChild(panel);
+  }
+
+ }
+
+ const ranked = model.combined;
+
+ let html = `
+  <h2 style="margin-top:0;color:#58d6ff">
+   INTELLIGENT PREDICTION CENTRE
+  </h2>
+
+  <p style="color:#aab5c5;font-size:13px">
+   Historical statistical distribution — not guaranteed outcomes.
+  </p>
+
+  <h3>TOP 3 CANDIDATES</h3>
+
+  <div style="display:flex;gap:12px;flex-wrap:wrap">
+ `;
+
+ ranked.slice(0,3).forEach((item,index)=>{
+
+  html += `
+   <div style="
+    flex:1;
+    min-width:75px;
+    background:#202d43;
+    padding:14px;
+    border-radius:12px;
+    text-align:center;
+   ">
+    <div style="font-size:12px;color:#aab5c5">
+     RANK ${index+1}
+    </div>
+
+    <div style="
+     font-size:35px;
+     font-weight:900;
+     color:#58d6ff;
+    ">
+     ${item.digit}
+    </div>
+
+    <div style="font-size:14px">
+     ${item.probability.toFixed(1)}%
+    </div>
+   </div>
+  `;
+
+ });
+
+ html += `
+  </div>
+
+  <h3>ALL DIGIT PROBABILITIES</h3>
+ `;
+
+ const byDigit = [...ranked].sort(
+  (a,b)=>a.digit-b.digit
+ );
+
+ byDigit.forEach(item=>{
+
+  html += `
+   <div style="margin:12px 0">
+
+    <div style="
+     display:flex;
+     justify-content:space-between;
+     font-size:13px;
+     margin-bottom:5px;
+    ">
+     <span>DIGIT ${item.digit}</span>
+     <strong>${item.probability.toFixed(1)}%</strong>
+    </div>
+
+    <div style="
+     background:#303b50;
+     height:10px;
+     border-radius:10px;
+     overflow:hidden;
+    ">
+     <div style="
+      width:${Math.min(100,item.probability)}%;
+      height:100%;
+      background:linear-gradient(90deg,#7b2ff7,#00d4ff);
+      border-radius:10px;
+     "></div>
+    </div>
+
+   </div>
+  `;
+
+ });
+
+ html += `
+  <h3>FUTURE TICK OUTLOOK</h3>
+
+  <div style="
+   display:grid;
+   grid-template-columns:repeat(3,minmax(0,1fr));
+   gap:8px;
+  ">
+ `;
+
+ [5,10,20].forEach(horizon=>{
+
+  const candidates = ranked.slice(0,3);
+
+  html += `
+   <div style="
+    background:#202d43;
+    border-radius:10px;
+    padding:12px 5px;
+    text-align:center;
+   ">
+    <strong>NEXT ${horizon}</strong>
+
+    <div style="
+     font-size:19px;
+     font-weight:bold;
+     margin-top:8px;
+     color:#58d6ff;
+    ">
+     ${candidates.map(x=>x.digit).join(" / ")}
+    </div>
+
+    <small style="color:#aab5c5">
+     Ranked candidates
+    </small>
+   </div>
+  `;
+
+ });
+
+ html += `
+  </div>
+
+  <p style="
+   color:#aab5c5;
+   font-size:12px;
+   margin-bottom:0;
+  ">
+   Model agreement:
+   <strong>${model.agreementScore.toFixed(1)}%</strong>
+   | Minimum screening threshold: 50%
+  </p>
+ `;
+
+ panel.innerHTML = html;
+
+}
+ /* =====================================
+   MARKET CONDITION ENGINE
+===================================== */
+
+function analyseMarketCondition(){
+
+ if(ticks.length < 30) return null;
+
+ const recent = ticks.slice(-30);
+
+ const values = recent.map(t=>t.price);
+
+ const changes = [];
+
+ for(let i=1;i<values.length;i++){
+  changes.push(values[i]-values[i-1]);
+ }
+
+ const average =
+  changes.reduce((a,b)=>a+b,0)/changes.length;
+
+ const variance =
+  changes.reduce((sum,x)=>sum+Math.pow(x-average,2),0)
+  /changes.length;
+
+ const volatility = Math.sqrt(variance);
+
+ const upward = changes.filter(x=>x>0).length;
+ const downward = changes.filter(x=>x<0).length;
+
+ const movement = Math.abs(values.at(-1)-values[0]);
+
+ let condition = "RANGING";
+
+ if(volatility > 0 && movement > volatility*5){
+  condition = "TRENDING";
+ }
+
+ if(volatility > Math.abs(average)*2 && volatility > 0){
+  condition = "VOLATILE";
+ }
+
+ let direction = "SIDEWAYS";
+
+ if(upward > downward) direction = "UP";
+ if(downward > upward) direction = "DOWN";
+
+ return {
+  condition,
+  direction,
+  volatility,
+  upward,
+  downward
+ };
+
+}
+
+
+/* =====================================
+   OVERDUE DIGIT ANALYSIS
+===================================== */
+
+function getOverdueDigits(){
+
+ const lastSeen = Array(10).fill(-1);
+
+ ticks.forEach((tick,index)=>{
+  lastSeen[tick.digit] = index;
+ });
+
+ return lastSeen
+  .map((index,digit)=>({
+   digit,
+   overdue:index === -1
+    ? ticks.length
+    : ticks.length-1-index
+  }))
+  .sort((a,b)=>b.overdue-a.overdue);
+
+}
+
+
+/* =====================================
+   MARKET INTELLIGENCE DISPLAY
+===================================== */
+
+function renderMarketIntelligence(){
+
+ const market = analyseMarketCondition();
+
+ if(!market) return;
+
+ let panel = document.getElementById("marketIntel");
+
+ if(!panel){
+
+  panel = document.createElement("section");
+  panel.id = "marketIntel";
+
+  panel.style.cssText = `
+   background:#111827;
+   border:1px solid #344054;
+   border-radius:15px;
+   padding:18px;
+   margin:18px 0;
+   color:white;
+  `;
+
+  const prediction = document.getElementById("predictionPanel");
+
+  if(prediction){
+   prediction.insertAdjacentElement("afterend",panel);
+  }else{
+   document.body.appendChild(panel);
+  }
+
+ }
+
+ const overdue = getOverdueDigits();
+
+ panel.innerHTML = `
+  <h2 style="color:#58d6ff;margin-top:0">
+   MARKET INTELLIGENCE
+  </h2>
+
+  <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+
+   <div style="background:#202d43;padding:13px;border-radius:10px">
+    <small>MARKET CONDITION</small>
+    <h3>${market.condition}</h3>
+   </div>
+
+   <div style="background:#202d43;padding:13px;border-radius:10px">
+    <small>PRICE DIRECTION</small>
+    <h3>${market.direction}</h3>
+   </div>
+
+   <div style="background:#202d43;padding:13px;border-radius:10px">
+    <small>UPWARD TICKS</small>
+    <h3>${market.upward}</h3>
+   </div>
+
+   <div style="background:#202d43;padding:13px;border-radius:10px">
+    <small>DOWNWARD TICKS</small>
+    <h3>${market.downward}</h3>
+   </div>
+
+  </div>
+
+  <h3>OVERDUE DIGITS</h3>
+
+  <p style="color:#aab5c5">
+   ${overdue.slice(0,3).map(x=>
+    "Digit "+x.digit+" ("+x.overdue+" ticks)"
+   ).join(" | ")}
+  </p>
+
+  <small style="color:#aab5c5">
+   Overdue does not mean a digit is more likely to appear next.
+  </small>
+ `;
 
 }
 /* ---------------- INITIALISE ---------------- */
