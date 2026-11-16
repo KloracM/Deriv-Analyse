@@ -568,7 +568,7 @@ function renderMarkets() {
         const item = document.createElement("div");
 
         item.className = "market-card";
-
+item.dataset.symbol = symbol;
         const title = document.createElement("h3");
         title.textContent = name;
 
@@ -856,7 +856,22 @@ const lastDigit = Number(
     const currentPercentages = [];
 
 const highestDigit = digits.indexOf(Math.max(...digits));
+const marketCard = Array.from(
+    document.querySelectorAll(".market-card")
+).find(card => card.dataset.symbol === selectedSymbol);
 
+if (marketCard) {
+    const predictionDisplay =
+        marketCard.querySelector(".market-prediction");
+
+    predictionDisplay.innerHTML = `
+        <div style="font-size:12px;">HISTORICAL LEADER</div>
+        <div style="font-size:32px;font-weight:bold;">
+            ${highestDigit}
+        </div>
+        <div>${total} ticks analysed</div>
+    `;
+}
 digits.forEach((count, digit) => {
 
     const currentPercentage = total
