@@ -237,114 +237,67 @@ footer {
 <hr>
 
 <h3>🎯 Contract Selection</h3>
-<div class="contract-slider" style="display:flex !important; flex-direction:row !important; flex-wrap:nowrap !important; overflow-x:auto !important; overflow-y:hidden; width:100%; max-width:100%; gap:12px; padding:12px 5px; box-sizing:border-box;">
 
-<div class="contract-slider" style="
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    overflow-y: hidden;
-    width: 100%;
-    max-width: 100%;
+.contract-slider {
+    display: flex;
     gap: 12px;
+    overflow-x: auto;
+    white-space: nowrap;
     padding: 12px 5px;
-    box-sizing: border-box;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
-    touch-action: pan-x;
-">
+}
 
-    <!-- MATCHES -->
-    <div class="card" style="
-        flex: 0 0 85% !important;
-        min-width: 85%;
-        width: 85%;
-        box-sizing: border-box;
-        scroll-snap-align: start;
-    ">
+.contract-slider .card {
+    flex: 0 0 85%;
+    min-width: 85%;
+    scroll-snap-align: start;
+}
+
+.contract-slider button {
+    min-width: 100px;
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+.contract-slider::-webkit-scrollbar {
+    display: none;
+}
+    <div class="card">
         <h3>MATCHES</h3>
         <button type="button" id="matches-btn">MATCHES</button>
     </div>
 
-    <!-- DIFFERS -->
-    <div class="card" style="
-        flex: 0 0 85% !important;
-        min-width: 85%;
-        width: 85%;
-        box-sizing: border-box;
-        scroll-snap-align: start;
-    ">
+    <div class="card">
         <h3>DIFFERS</h3>
         <button type="button" id="differs-btn">DIFFERS</button>
     </div>
 
-    <!-- EVEN -->
-    <div class="card" style="
-        flex: 0 0 85% !important;
-        min-width: 85%;
-        width: 85%;
-        box-sizing: border-box;
-        scroll-snap-align: start;
-    ">
+    <div class="card">
         <h3>EVEN</h3>
         <button type="button" id="even-btn">EVEN</button>
     </div>
 
-    <!-- ODD -->
-    <div class="card" style="
-        flex: 0 0 85% !important;
-        min-width: 85%;
-        width: 85%;
-        box-sizing: border-box;
-        scroll-snap-align: start;
-    ">
+    <div class="card">
         <h3>ODD</h3>
         <button type="button" id="odd-btn">ODD</button>
     </div>
 
-    <!-- OVER -->
-    <div class="card" style="
-        flex: 0 0 85% !important;
-        min-width: 85%;
-        width: 85%;
-        box-sizing: border-box;
-        scroll-snap-align: start;
-    ">
+    <div class="card">
         <h3>OVER</h3>
         <button type="button" id="over-btn">OVER</button>
     </div>
 
-    <!-- UNDER -->
-    <div class="card" style="
-        flex: 0 0 85% !important;
-        min-width: 85%;
-        width: 85%;
-        box-sizing: border-box;
-        scroll-snap-align: start;
-    ">
+    <div class="card">
         <h3>UNDER</h3>
         <button type="button" id="under-btn">UNDER</button>
 
-        <br><br>
-
-        <label for="contract-barrier">Select barrier:</label>
-
-        <select id="contract-barrier">
-            <option value="0">Barrier 0</option>
-            <option value="1">Barrier 1</option>
-            <option value="2">Barrier 2</option>
-            <option value="3">Barrier 3</option>
-            <option value="4">Barrier 4</option>
-            <option value="5" selected>Barrier 5</option>
-            <option value="6">Barrier 6</option>
-            <option value="7">Barrier 7</option>
-            <option value="8">Barrier 8</option>
-        </select>
     </div>
 
 </div>
 
+    
 <div class="card">
     <h3>📊 Selected Contract Analysis</h3>
     <div id="contract-analysis">
