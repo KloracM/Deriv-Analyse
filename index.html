@@ -672,7 +672,7 @@ function receiveHistory(data){
 }
 
 
-/* ---------------- LIVE TICKS ---------------- */
+/* ---------------- LIVE AND DEMO TICKS ---------------- */
 
 function receiveTick(tick){
 
@@ -682,6 +682,22 @@ function receiveTick(tick){
 
  if(tick.pip_size !== undefined){
   pipSize = Number(tick.pip_size);
+ }
+
+ if(!isDemoTick){
+
+  lastRealTickAt = Date.now();
+
+  if(demoBadge){
+   demoBadge.remove();
+   demoBadge = null;
+  }
+
+  if(demoTimer){
+   clearInterval(demoTimer);
+   demoTimer = null;
+  }
+
  }
 
  const digit = getLastDigit(quote);
@@ -711,7 +727,6 @@ function receiveTick(tick){
  updateChart();
 
 }
-
 
 /* ---------------- MARKET MOVEMENT ---------------- */
 
@@ -1157,13 +1172,87 @@ scanTimer = setInterval(()=>{
  }
 
 },30000);
+/* ---------------- DEMO MODE ENGINE ---------------- */
 
+let isDemoTick = false;
+let demoTimer = null;
+let lastRealTickAt = 0;
+let demoBadge = null;
 
+let demoPrice = 1000;
+
+function createDemoBadge(){
+
+ if(demoBadge) return;
+
+ demoBadge = document.createElement("div");
+
+ demoBadge.textContent = "● DEMO DATA";
+
+ demoBadge.style.cssText = `
+  position:fixed;
+  top:12px;
+  right:12px;
+  z-index:99999;
+  background:#ffb300;
+  color:#111;
+  padding:9px 15px;
+  border-radius:20px;
+  font-weight:bold;
+  font-size:12px;
+  box-shadow:0 3px 12px #0005;
+ `;
+
+ document.body.appendChild(demoBadge);
+
+}
+
+function generateDemoTick(){
+
+ if(Date.now() - lastRealTickAt < 8000) return;
+
+ createDemoBadge();
+
+ const movement = (Math.random() - 0.5) * 0.8;
+
+ demoPrice += movement;
+
+ const decimals = Number.isFinite(pipSize) ? pipSize : 2;
+
+ const quote = Number(demoPrice.toFixed(decimals));
+
+ isDemoTick = true;
+
+ receiveTick({
+
+  quote: quote,
+
+  epoch: Math.floor(Date.now()/1000),
+
+  pip_size: decimals
+
+ });
+
+ isDemoTick = false;
+
+}
+
+function startDemoMode(){
+
+ if(demoTimer) return;
+
+ demoTimer = setInterval(generateDemoTick,1000);
+
+ console.log("Demo mode started");
+
+}
 /* ---------------- INITIALISE ---------------- */
 
 renderDigits();
 
 connect();
+
+startDemoMode();
 
 window.addEventListener("resize",updateChart);
 
