@@ -37,7 +37,7 @@ button,select{
 }
 
 button{background:#00d99a;color:#06131b}
-select{background:#202c42;color:white}
+select{background:#202c42;color:white;max-width:100%}
 
 .scan{
  width:100%;
@@ -89,6 +89,7 @@ select{background:#202c42;color:white}
  font-size:20px;
  font-weight:bold;
  border:1px solid #34445f;
+ transition:.2s;
 }
 
 .digit.active{
@@ -97,6 +98,11 @@ select{background:#202c42;color:white}
  transform:scale(1.07);
  box-shadow:0 0 15px #ff477e;
  animation:pop .4s ease;
+}
+
+.digit.hot{
+ border:2px solid #00e5a0;
+ box-shadow:0 0 12px #00e5a0;
 }
 
 @keyframes pop{
@@ -184,7 +190,7 @@ footer{
   <h1>DERIV <span class="logo">ANALYSER</span></h1>
   <div class="status">Advanced Synthetic Market Intelligence</div>
  </div>
- <div class="status" id="connection">● Connecting...</div>
+ <div class="status" id="connection">● CONNECTING...</div>
 </header>
 
 <div class="card">
@@ -213,14 +219,11 @@ footer{
     <option value="CRASH1000">Crash 1000</option>
     <option value="BOOM500">Boom 500</option>
     <option value="CRASH500">Crash 500</option>
-    <option value="JUMP10">Jump 10</option>
-    <option value="JUMP25">Jump 25</option>
-    <option value="JUMP50">Jump 50</option>
-    <option value="JUMP75">Jump 75</option>
-    <option value="JUMP100">Jump 100</option>
-    <option value="STEPS">Step Index</option>
-    <option value="RDBULL">Range Break 100</option>
-    <option value="RDBEAR">Range Break 200</option>
+    <option value="JD10">Jump 10</option>
+    <option value="JD25">Jump 25</option>
+    <option value="JD50">Jump 50</option>
+    <option value="JD75">Jump 75</option>
+    <option value="JD100">Jump 100</option>
    </select>
   </div>
  </div>
@@ -229,6 +232,7 @@ footer{
 <button class="scan" id="scanButton">⚡ RUN SCAN NOW</button>
 
 <div class="section grid">
+
  <div class="card">
   <h3>LIVE PRICE</h3>
   <div class="value blue" id="price">--</div>
@@ -252,19 +256,20 @@ footer{
   <div class="value green" id="tickCount">0</div>
   <div class="small">Collected market ticks</div>
  </div>
+
 </div>
 
 <div class="section card highlight">
  <div class="row">
-  <h2>🎯 AI CANDIDATE DIGIT</h2>
-  <span class="small">Experimental statistical estimate</span>
+  <h2>🎯 CANDIDATE DIGIT</h2>
+  <span class="small">Statistical estimate</span>
  </div>
 
  <div class="big-digit" id="candidate">?</div>
 
  <div style="text-align:center">
   <div class="value green" id="confidence">0%</div>
-  <div class="small">Relative statistical frequency</div>
+  <div class="small">Observed frequency, not prediction accuracy</div>
  </div>
 </div>
 
@@ -277,11 +282,12 @@ footer{
  <div id="digits"></div>
 
  <div class="small">
-  Distribution is calculated from the latest 100 ticks.
+  Distribution calculated from the latest 100 ticks.
  </div>
 </div>
 
 <div class="section grid">
+
  <div class="card">
   <h3>MOST FREQUENT DIGIT</h3>
   <div class="value green" id="hotDigit">--</div>
@@ -301,12 +307,14 @@ footer{
   <h3>OVERALL TREND</h3>
   <div class="value yellow" id="trend">WAIT</div>
  </div>
+
 </div>
 
 <div class="section card">
- <h2>🔮 FUTURE TICK PREDICTIONS</h2>
+ <h2>🔮 FUTURE TICK ESTIMATES</h2>
 
  <div class="grid">
+
   <div class="card">
    <h3>NEXT TICK ESTIMATE</h3>
    <div class="value yellow" id="nextTick">--</div>
@@ -321,11 +329,12 @@ footer{
    <h3>EXPECTED DIRECTION</h3>
    <div class="value" id="futureDirection">WAIT</div>
   </div>
+
  </div>
 
  <div class="small">
-  These are experimental estimates based on recent tick patterns,
-  not guaranteed predictions of future market movements.
+  Experimental statistical estimates based on recent observations.
+  Future ticks are not reliably predictable.
  </div>
 </div>
 
@@ -340,6 +349,7 @@ footer{
  <div class="signal yellow" id="signal">WAITING FOR DATA</div>
 
  <div class="grid" style="margin-top:12px">
+
   <div class="card">
    <h3>EMA 9</h3>
    <div class="value" id="ema9">--</div>
@@ -354,11 +364,13 @@ footer{
    <h3>RSI ESTIMATE</h3>
    <div class="value" id="rsi">--</div>
   </div>
+
  </div>
 </div>
 
 <div class="section card">
  <h2>📋 SCAN HISTORY</h2>
+
  <table>
   <thead>
    <tr>
@@ -368,6 +380,7 @@ footer{
     <th>SIGNAL</th>
    </tr>
   </thead>
+
   <tbody id="history">
    <tr><td colspan="4">Waiting for scan...</td></tr>
   </tbody>
@@ -380,142 +393,321 @@ footer{
 </footer>
 
 <script>
-const WS_URL = "wss://ws.derivws.com/websockets/v3?app_id=1089";
 
-let ws;
+const APP_ID = "1089";
+const WS_URL =
+ "wss://ws.derivws.com/websockets/v3?app_id=" + APP_ID;
+
+let ws = null;
 let ticks = [];
 let prices = [];
 let counts = Array(10).fill(0);
 let scanHistory = [];
+
 let currentSymbol = "R_50";
-let scanTimer;
-let reconnectTimer;
-let manualScan = false;
+let currentName = "Volatility 50";
+
+let reconnectTimer = null;
+let scanTimer = null;
+let pipSize = 2;
+let intentionalClose = false;
 
 const $ = id => document.getElementById(id);
+
+
+/* ---------------- CONNECTION ---------------- */
 
 function connect(){
 
  clearTimeout(reconnectTimer);
 
+ intentionalClose = false;
+
  if(ws){
-  ws.onclose = null;
+  intentionalClose = true;
   ws.close();
  }
 
- $("connection").textContent = "● Connecting...";
+ intentionalClose = false;
 
- ws = new WebSocket(WS_URL);
+ $("connection").textContent = "● CONNECTING...";
+ $("connection").style.color = "#ffd166";
 
- ws.onopen = () => {
+ const socket = new WebSocket(WS_URL);
+
+ ws = socket;
+
+ socket.onopen = function(){
+
+  if(ws !== socket) return;
+
   $("connection").textContent = "● CONNECTED";
   $("connection").style.color = "#00e5a0";
 
-  subscribe();
+  subscribeMarket();
+
  };
 
- ws.onmessage = event => {
-  const data = JSON.parse(event.data);
+ socket.onmessage = function(event){
+
+  if(ws !== socket) return;
+
+  let data;
+
+  try{
+   data = JSON.parse(event.data);
+  }catch(error){
+   return;
+  }
 
   if(data.error){
-   $("connection").textContent = "● API ERROR";
+
+   $("connection").textContent =
+    "● API ERROR: " + data.error.message;
+
+   $("connection").style.color = "#ff5577";
+
+   console.error(data.error);
+
    return;
+  }
+
+  if(data.msg_type === "history"){
+   receiveHistory(data);
   }
 
   if(data.msg_type === "tick"){
    receiveTick(data.tick);
   }
 
-  if(data.msg_type === "history"){
-   if(data.history){
-    data.history.prices.forEach((p,i)=>{
-     if(!prices.length || prices[prices.length-1] !== Number(p)){
-      prices.push(Number(p));
-     }
-    });
-
-    prices = prices.slice(-200);
-    updateChart();
-   }
-  }
  };
 
- ws.onclose = () => {
+ socket.onerror = function(){
+
+  if(ws !== socket) return;
+
+  $("connection").textContent = "● CONNECTION ERROR";
+  $("connection").style.color = "#ff5577";
+
+ };
+
+ socket.onclose = function(){
+
+  if(ws !== socket) return;
+
   $("connection").textContent = "● DISCONNECTED";
   $("connection").style.color = "#ff5577";
 
-  reconnectTimer = setTimeout(connect,3000);
+  reconnectTimer = setTimeout(connect,5000);
+
  };
 
- ws.onerror = () => {
-  $("connection").textContent = "● CONNECTION ERROR";
- };
 }
 
-function subscribe(){
+
+/* ---------------- MARKET SUBSCRIPTION ---------------- */
+
+function subscribeMarket(){
 
  if(!ws || ws.readyState !== WebSocket.OPEN) return;
 
  ws.send(JSON.stringify({
-  forget_all:"ticks"
+
+  ticks_history: currentSymbol,
+  count: 100,
+  end: "latest",
+  style: "ticks",
+  subscribe: 1
+
  }));
+
+ $("connection").textContent = "● LOADING MARKET DATA...";
+
+}
+
+
+function switchMarket(symbol,name){
+
+ currentSymbol = symbol;
+ currentName = name;
 
  ticks = [];
  prices = [];
  counts = Array(10).fill(0);
+ scanHistory = [];
 
- renderDigits();
+ $("marketName").textContent = name;
+
  resetDisplay();
 
- ws.send(JSON.stringify({
-  ticks_history:currentSymbol,
-  count:100,
-  end:"latest",
-  style:"ticks",
-  subscribe:1
- }));
+ renderDigits();
+ renderHistory();
+
+ if(ws && ws.readyState === WebSocket.OPEN){
+
+  ws.send(JSON.stringify({
+   forget_all: "ticks"
+  }));
+
+  subscribeMarket();
+
+ }else{
+
+  connect();
+
+ }
+
 }
 
+
+/* ---------------- RESET DISPLAY ---------------- */
+
 function resetDisplay(){
+
  $("price").textContent = "--";
  $("lastDigit").textContent = "--";
+ $("movement").textContent = "--";
  $("tickCount").textContent = "0";
+
  $("candidate").textContent = "?";
  $("confidence").textContent = "0%";
+
+ $("hotDigit").textContent = "--";
+ $("coldDigit").textContent = "--";
+ $("evenOdd").textContent = "--";
+
+ $("nextTick").textContent = "--";
+ $("followingTick").textContent = "--";
+ $("futureDirection").textContent = "WAIT";
+
+ $("ema9").textContent = "--";
+ $("ema21").textContent = "--";
+ $("rsi").textContent = "--";
+
  $("signal").textContent = "COLLECTING DATA";
+ $("signal").className = "signal yellow";
+
+ $("trend").textContent = "WAIT";
+ $("trend").className = "value yellow";
+
+ updateChart();
+
 }
+
+
+/* ---------------- DIGIT EXTRACTION ---------------- */
+
+function getLastDigit(price){
+
+ const formatted = Number(price).toFixed(pipSize);
+
+ const digits = formatted.replace(".","");
+
+ return Number(digits.slice(-1));
+
+}
+
+
+/* ---------------- HISTORICAL TICKS ---------------- */
+
+function receiveHistory(data){
+
+ if(!data.history) return;
+
+ pipSize = Number(data.pip_size ?? 2);
+
+ const historicalPrices = data.history.prices || [];
+ const historicalTimes = data.history.times || [];
+
+ ticks = [];
+ prices = [];
+
+ historicalPrices.forEach((price,index)=>{
+
+  const quote = Number(price);
+
+  const digit = getLastDigit(quote);
+
+  prices.push(quote);
+
+  ticks.push({
+
+   price: quote,
+   digit: digit,
+   time: historicalTimes[index] || 0
+
+  });
+
+ });
+
+ prices = prices.slice(-200);
+ ticks = ticks.slice(-200);
+
+ if(ticks.length){
+
+  const latest = ticks[ticks.length-1];
+
+  $("price").textContent =
+   latest.price.toFixed(pipSize);
+
+  $("lastDigit").textContent = latest.digit;
+
+  $("tickCount").textContent = ticks.length;
+
+  analyse();
+
+ }
+
+ updateChart();
+
+ $("connection").textContent = "● CONNECTED";
+ $("connection").style.color = "#00e5a0";
+
+}
+
+
+/* ---------------- LIVE TICKS ---------------- */
 
 function receiveTick(tick){
 
- if(!tick || !tick.quote) return;
+ if(!tick || tick.quote === undefined) return;
 
  const quote = Number(tick.quote);
- const priceString = String(tick.quote);
- const digit = Number(priceString.replace(".","").slice(-1));
 
+ if(tick.pip_size !== undefined){
+  pipSize = Number(tick.pip_size);
+ }
+
+ const digit = getLastDigit(quote);
+
+ const item = {
+
+  price: quote,
+  digit: digit,
+  time: tick.epoch
+
+ };
+
+ ticks.push(item);
  prices.push(quote);
- prices = prices.slice(-200);
-
- ticks.push({
-  price:quote,
-  digit:digit,
-  time:tick.epoch
- });
 
  ticks = ticks.slice(-200);
+ prices = prices.slice(-200);
 
- $("price").textContent = tick.quote;
+ $("price").textContent = quote.toFixed(pipSize);
  $("lastDigit").textContent = digit;
  $("tickCount").textContent = ticks.length;
 
  updateMovement();
+
  analyse();
+
  updateChart();
 
- if(ticks.length % 10 === 0){
-  automaticScan();
- }
 }
+
+
+/* ---------------- MARKET MOVEMENT ---------------- */
 
 function updateMovement(){
 
@@ -539,7 +731,11 @@ function updateMovement(){
 
  $("movement").textContent = direction;
  $("movement").className = "value " + color;
+
 }
+
+
+/* ---------------- DIGIT ANALYSIS ---------------- */
 
 function analyse(){
 
@@ -566,6 +762,7 @@ function analyse(){
  $("coldDigit").textContent = cold.digit;
 
  const total = recent.length;
+
  const even = recent.filter(t=>t.digit%2===0).length;
  const odd = total-even;
 
@@ -574,40 +771,67 @@ function analyse(){
 
  $("candidate").textContent = hot.digit;
 
- const frequency = (hot.count/total)*100;
-
  $("confidence").textContent =
-  frequency.toFixed(1)+"%";
+  ((hot.count/total)*100).toFixed(1)+"%";
 
  updatePredictions();
+
  updateIndicators();
+
 }
+
+
+/* ---------------- DIGIT DISPLAY ---------------- */
 
 function renderDigits(){
 
  const box = $("digits");
+
  box.innerHTML = "";
 
  const total = counts.reduce((a,b)=>a+b,0);
 
+ const maximum = Math.max(...counts);
+
  counts.forEach((count,digit)=>{
 
-  const percent = total ? (count/total*100).toFixed(1) : "0.0";
+  const percent = total
+   ? (count/total*100).toFixed(1)
+   : "0.0";
 
   const div = document.createElement("div");
 
   div.className = "digit";
 
-  if(ticks.length && ticks[ticks.length-1].digit===digit){
+  if(ticks.length &&
+     ticks[ticks.length-1].digit === digit){
+
    div.classList.add("active");
+
   }
 
-  div.innerHTML =
-   digit + '<span class="percent">'+percent+'%</span>';
+  if(total && count === maximum){
+   div.classList.add("hot");
+  }
+
+  const number = document.createElement("span");
+  number.textContent = digit;
+
+  const percentage = document.createElement("span");
+  percentage.className = "percent";
+  percentage.textContent = percent+"%";
+
+  div.appendChild(number);
+  div.appendChild(percentage);
 
   box.appendChild(div);
+
  });
+
 }
+
+
+/* ---------------- EXPERIMENTAL ESTIMATES ---------------- */
 
 function updatePredictions(){
 
@@ -617,7 +841,9 @@ function updatePredictions(){
 
  const frequencies = Array(10).fill(0);
 
- recent.forEach(t=>frequencies[t.digit]++);
+ recent.forEach(t=>{
+  frequencies[t.digit]++;
+ });
 
  const ranked = frequencies
   .map((count,digit)=>({digit,count}))
@@ -631,15 +857,19 @@ function updatePredictions(){
 
  let direction = "SIDEWAYS";
 
- if(first>last) direction = "UP";
- if(first<last) direction = "DOWN";
+ if(first > last) direction = "UP";
+ if(first < last) direction = "DOWN";
 
  $("futureDirection").textContent = direction;
+
 }
+
+
+/* ---------------- EMA CALCULATION ---------------- */
 
 function ema(data,period){
 
- if(data.length<period) return null;
+ if(data.length < period) return null;
 
  const k = 2/(period+1);
 
@@ -647,158 +877,291 @@ function ema(data,period){
   .reduce((a,b)=>a+b,0)/period;
 
  for(let i=period;i<data.length;i++){
-  value=data[i]*k+value*(1-k);
+
+  value = data[i]*k + value*(1-k);
+
  }
 
  return value;
+
 }
+
+
+/* ---------------- RSI CALCULATION ---------------- */
 
 function calculateRSI(data){
 
- if(data.length<15) return null;
+ if(data.length < 15) return null;
 
- let gains=0,losses=0;
+ let gains = 0;
+ let losses = 0;
 
  for(let i=data.length-14;i<data.length;i++){
 
-  const change=data[i]-data[i-1];
+  const change = data[i]-data[i-1];
 
-  if(change>0) gains+=change;
-  else losses-=change;
+  if(change > 0) gains += change;
+  else losses -= change;
+
  }
 
- if(losses===0) return 100;
+ if(losses === 0) return 100;
 
- const rs=(gains/14)/(losses/14);
+ const rs = (gains/14)/(losses/14);
 
  return 100-(100/(1+rs));
+
 }
+
+
+/* ---------------- INDICATORS ---------------- */
 
 function updateIndicators(){
 
- const e9=ema(prices,9);
- const e21=ema(prices,21);
- const r=calculateRSI(prices);
+ const e9 = ema(prices,9);
+ const e21 = ema(prices,21);
+ const r = calculateRSI(prices);
 
- if(e9===null || e21===null || r===null) return;
+ if(e9 === null || e21 === null || r === null) return;
 
- $("ema9").textContent=e9.toFixed(4);
- $("ema21").textContent=e21.toFixed(4);
- $("rsi").textContent=r.toFixed(1);
+ $("ema9").textContent = e9.toFixed(pipSize);
+ $("ema21").textContent = e21.toFixed(pipSize);
+ $("rsi").textContent = r.toFixed(1);
 
- let signal="WAIT";
- let color="yellow";
+ let signal = "WAIT";
+ let color = "yellow";
 
- if(e9>e21 && r>50 && r<70){
-  signal="BULLISH";
-  color="green";
+ if(e9 > e21 && r > 50 && r < 70){
+
+  signal = "BULLISH";
+  color = "green";
+
  }
 
- if(e9<e21 && r<50 && r>30){
-  signal="BEARISH";
-  color="red";
+ if(e9 < e21 && r < 50 && r > 30){
+
+  signal = "BEARISH";
+  color = "red";
+
  }
 
- $("signal").textContent=signal;
- $("signal").className="signal "+color;
+ $("signal").textContent = signal;
+ $("signal").className = "signal "+color;
 
- $("trend").textContent=signal;
- $("trend").className="value "+color;
+ $("trend").textContent = signal;
+ $("trend").className = "value "+color;
+
 }
+
+
+/* ---------------- AUTOMATIC SCANNING ---------------- */
 
 function automaticScan(){
 
- if(ticks.length<20) return;
+ if(ticks.length < 20) return;
 
- const recent=ticks.slice(-100);
+ const recent = ticks.slice(-100);
 
- const frequency=Math.max(...counts)/recent.length*100;
+ const total = recent.length;
 
- const digit=counts.indexOf(Math.max(...counts));
+ const maximum = Math.max(...counts);
 
- const signal=$("signal").textContent;
+ const digit = counts.indexOf(maximum);
 
- const item={
-  time:new Date().toLocaleTimeString(),
-  digit:digit,
-  frequency:frequency.toFixed(1),
-  signal:signal
+ const frequency = (maximum/total)*100;
+
+ const signal = $("signal").textContent;
+
+ const item = {
+
+  time: new Date().toLocaleTimeString(),
+  digit: digit,
+  frequency: frequency.toFixed(1),
+  signal: signal
+
  };
 
  scanHistory.unshift(item);
- scanHistory=scanHistory.slice(0,10);
+
+ scanHistory = scanHistory.slice(0,10);
 
  renderHistory();
+
 }
+
+
+/* ---------------- SCAN HISTORY ---------------- */
 
 function renderHistory(){
 
- $("history").innerHTML="";
+ $("history").innerHTML = "";
+
+ if(!scanHistory.length){
+
+  $("history").innerHTML =
+   '<tr><td colspan="4">Waiting for scan...</td></tr>';
+
+  return;
+
+ }
 
  scanHistory.forEach(item=>{
 
-  const row=document.createElement("tr");
+  const row = document.createElement("tr");
 
-  [item.time,item.digit,item.frequency+"%",item.signal]
-   .forEach(value=>{
-    const td=document.createElement("td");
-    td.textContent=value;
-    row.appendChild(td);
-   });
+  [
+   item.time,
+   item.digit,
+   item.frequency+"%",
+   item.signal
+
+  ].forEach(value=>{
+
+   const td = document.createElement("td");
+
+   td.textContent = value;
+
+   row.appendChild(td);
+
+  });
 
   $("history").appendChild(row);
+
  });
+
 }
+
+
+/* ---------------- CHART ---------------- */
 
 function updateChart(){
 
- const canvas=$("chart");
- const ctx=canvas.getContext("2d");
+ const canvas = $("chart");
 
- const ratio=window.devicePixelRatio||1;
- const width=canvas.clientWidth;
- const height=220;
+ const ctx = canvas.getContext("2d");
 
- canvas.width=width*ratio;
- canvas.height=height*ratio;
+ const ratio = window.devicePixelRatio || 1;
 
- ctx.scale(ratio,ratio);
+ const width = canvas.clientWidth || 300;
+ const height = 220;
+
+ canvas.width = width*ratio;
+ canvas.height = height*ratio;
+
+ ctx.setTransform(ratio,0,0,ratio,0,0);
 
  ctx.clearRect(0,0,width,height);
 
- if(prices.length<2) return;
+ if(prices.length < 2) return;
 
- const data=prices.slice(-100);
+ const data = prices.slice(-100);
 
- const min=Math.min(...data);
- const max=Math.max(...data);
- const range=max-min||1;
+ const min = Math.min(...data);
+ const max = Math.max(...data);
+
+ const range = max-min || 1;
 
  ctx.beginPath();
- ctx.strokeStyle="#00d99a";
- ctx.lineWidth=2;
+
+ ctx.strokeStyle = "#00d99a";
+ ctx.lineWidth = 2;
 
  data.forEach((price,i)=>{
 
-  const x=i/(data.length-1)*width;
-  const y=height-((price-min)/range)*(height-25)-12;
+  const x = i/(data.length-1)*width;
 
-  if(i===0)ctx.moveTo(x,y);
+  const y =
+   height-((price-min)/range)*(height-25)-12;
+
+  if(i===0) ctx.moveTo(x,y);
   else ctx.lineTo(x,y);
+
  });
 
  ctx.stroke();
+
 }
 
-function automaticRefresh(){
 
- clearInterval(scanTimer);
+/* ---------------- MANUAL SCAN ---------------- */
 
- scanTimer=setInterval(()=>{
-  if(ticks.length>=20){
-   automaticScan();
-  }
- },30000);
-}
+$("scanButton").addEventListener("click",()=>{
 
-$("scanButton").addEventListener("click",()=>
+ if(ticks.length < 20){
+
+  $("signal").textContent = "COLLECTING MORE DATA";
+
+  return;
+
+ }
+
+ analyse();
+
+ automaticScan();
+
+ $("scanButton").textContent = "✓ SCAN COMPLETED";
+
+ setTimeout(()=>{
+
+  $("scanButton").textContent = "⚡ RUN SCAN NOW";
+
+ },1500);
+
+});
+
+
+/* ---------------- MARKET SELECTORS ---------------- */
+
+$("market").addEventListener("change",function(){
+
+ $("otherMarket").value = "";
+
+ const symbol = this.value;
+
+ const name = this.options[this.selectedIndex].text;
+
+ switchMarket(symbol,name);
+
+});
+
+
+$("otherMarket").addEventListener("change",function(){
+
+ if(!this.value) return;
+
+ const symbol = this.value;
+
+ const name = this.options[this.selectedIndex].text;
+
+ $("market").selectedIndex = -1;
+
+ switchMarket(symbol,name);
+
+});
+
+
+/* ---------------- AUTOMATIC SCAN TIMER ---------------- */
+
+scanTimer = setInterval(()=>{
+
+ if(ticks.length >= 20){
+
+  automaticScan();
+
+ }
+
+},30000);
+
+
+/* ---------------- INITIALISE ---------------- */
+
+renderDigits();
+
+connect();
+
+window.addEventListener("resize",updateChart);
+
+</script>
+
+</body>
+</html>
