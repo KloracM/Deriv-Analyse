@@ -141,6 +141,48 @@ footer {
     display: none;
 }
 </style>
+   <style>
+.market-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.market-card {
+    background: #172b3a;
+    border: 1px solid #29465a;
+    border-radius: 14px;
+    padding: 16px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.market-card:active {
+    transform: scale(0.96);
+}
+
+.market-card h3 {
+    font-size: 14px;
+    color: #ffffff;
+}
+
+.market-card p {
+    color: #a9bdca;
+    font-size: 12px;
+}
+
+.market-prediction {
+    background: #203e50;
+    color: #00d9a5;
+    padding: 10px 5px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 13px;
+    margin-top: 10px;
+}
+</style> 
 </head>
 
 <body>
@@ -486,18 +528,20 @@ function renderMarkets() {
 
     const filtered = markets.filter(market => {
 
-        const name =
+        const name = String(
             market.underlying_symbol_name ||
             market.display_name ||
             market.symbol ||
             market.underlying_symbol ||
-            "Unnamed market";
+            "Unnamed market"
+        );
 
         return name.toLowerCase().includes(search);
 
     });
 
     marketList.innerHTML = "";
+    marketList.className = "market-grid";
 
     if (filtered.length === 0) {
 
@@ -523,9 +567,22 @@ function renderMarkets() {
 
         const item = document.createElement("div");
 
-        item.className = "market-item";
+        item.className = "market-card";
 
-        item.textContent = name;
+        const title = document.createElement("h3");
+        title.textContent = name;
+
+        const marketSymbol = document.createElement("p");
+        marketSymbol.textContent = symbol;
+
+        const prediction = document.createElement("div");
+        prediction.className = "market-prediction";
+        prediction.textContent =
+            "Prediction: Engine testing";
+
+        item.appendChild(title);
+        item.appendChild(marketSymbol);
+        item.appendChild(prediction);
 
         item.onclick = function() {
 
