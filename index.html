@@ -150,6 +150,32 @@ footer {
     display: none;
 }
 </style>
+    .contract-slider {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding: 12px 5px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+.contract-slider .card {
+    flex: 0 0 85%;
+    min-width: 85%;
+    scroll-snap-align: start;
+}
+
+.contract-slider button {
+    min-width: 100px;
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+.contract-slider::-webkit-scrollbar {
+    display: none;
+}
    <style>
 .market-grid {
     display: grid;
@@ -237,33 +263,8 @@ footer {
 <hr>
 
 <h3>🎯 Contract Selection</h3>
+<div class="contract-slider">
 
-.contract-slider {
-    display: flex;
-    gap: 12px;
-    overflow-x: auto;
-    white-space: nowrap;
-    padding: 12px 5px;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-}
-
-.contract-slider .card {
-    flex: 0 0 85%;
-    min-width: 85%;
-    scroll-snap-align: start;
-}
-
-.contract-slider button {
-    min-width: 100px;
-    padding: 12px;
-    border-radius: 10px;
-    font-weight: bold;
-}
-
-.contract-slider::-webkit-scrollbar {
-    display: none;
-}
     <div class="card">
         <h3>MATCHES</h3>
         <button type="button" id="matches-btn">MATCHES</button>
@@ -292,10 +293,10 @@ footer {
     <div class="card">
         <h3>UNDER</h3>
         <button type="button" id="under-btn">UNDER</button>
-
     </div>
 
 </div>
+
 
     
 <div class="card">
