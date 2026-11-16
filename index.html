@@ -490,7 +490,8 @@ function connect(){
   $("connection").style.color = "#ff5577";
 
  };
-socket.onclose = function(event){
+
+ socket.onclose = function(event){
 
   if(ws !== socket) return;
 
@@ -502,7 +503,7 @@ socket.onclose = function(event){
 
   console.log("Deriv connection closed:", event.code, event.reason);
 
-  reconnectTimer = setTimeout(connect,5000);
+  reconnectTimer = setTimeout(connect, 5000);
 
 };
  
