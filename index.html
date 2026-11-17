@@ -8,24 +8,32 @@
  /* -------- PREMIUM LAST DIGIT DISPLAY -------- */
 
 #lastDigit {
-    font-size: 52px;
-    font-weight: 900;
-    color: #00e5ff;
-    text-shadow:
-        0 0 8px #00e5ff,
-        0 0 18px #00e5ff,
-        0 0 35px rgba(0,229,255,0.8);
-    animation: digitGlow 1.5s infinite alternate;
+ font-size:52px;
+ font-weight:900;
+ color:#00e5ff;
+ text-shadow:
+  0 0 8px #00e5ff,
+  0 0 18px #00e5ff,
+  0 0 35px rgba(0,229,255,0.8);
+ animation:digitGlow 1s infinite alternate,
+           digitPop .35s ease;
 }
 
 @keyframes digitGlow {
-    from {
-        text-shadow: 0 0 8px #00e5ff;
-    }
-    to {
-        text-shadow: 0 0 25px #00e5ff,
-                     0 0 45px #00e5ff;
-    }
+ from {
+  text-shadow:0 0 8px #00e5ff;
+ }
+ to {
+  text-shadow:
+   0 0 25px #00e5ff,
+   0 0 45px #00e5ff;
+ }
+}
+
+@keyframes digitPop {
+ 0% {transform:scale(.7)}
+ 60% {transform:scale(1.3)}
+ 100% {transform:scale(1)}
 }
 *{box-sizing:border-box;margin:0;padding:0}
 
@@ -563,12 +571,17 @@ function switchMarket(symbol,name){
  counts = Array(10).fill(0);
  scanHistory = [];
 
- $("marketName").textContent = name;
-
  resetDisplay();
+
+ $("marketName").textContent = name;
 
  renderDigits();
  renderHistory();
+
+ if(demoTimer){
+  clearInterval(demoTimer);
+  demoTimer = null;
+ }
 
  if(ws && ws.readyState === WebSocket.OPEN){
 
@@ -583,6 +596,8 @@ function switchMarket(symbol,name){
   connect();
 
  }
+
+ startDemoMode();
 
 }
 
@@ -705,6 +720,7 @@ function receiveTick(tick){
   pipSize = Number(tick.pip_size);
  }
 
+ // Only update connection information for real ticks
  if(!isDemoTick){
 
   lastRealTickAt = Date.now();
@@ -714,16 +730,14 @@ function receiveTick(tick){
    demoBadge = null;
   }
 
-  
+ }
 
  const digit = getLastDigit(quote);
 
  const item = {
-
   price: quote,
   digit: digit,
   time: tick.epoch
-
  };
 
  ticks.push(item);
@@ -734,6 +748,14 @@ function receiveTick(tick){
 
  $("price").textContent = quote.toFixed(pipSize);
  $("lastDigit").textContent = digit;
+ const digitElement = $("lastDigit");
+
+digitElement.style.animation = "none";
+
+void digitElement.offsetWidth;
+
+digitElement.style.animation =
+ "digitGlow 1s infinite alternate, digitPop .35s ease";
  $("tickCount").textContent = ticks.length;
 
  updateMovement();
@@ -1030,16 +1052,8 @@ function getOverdueDigits(){
    digit,
    overdue:index === -1
     ? ticks.length
-    : ticks.length-1-index
-  }))
-  .sort((a,b)=>b.overdue-a.overdue);
+/* ---------------- INTELLIGENT ANALYSIS ---------------- */
 
-}
-
-
-/* =====================================
-   MARKET INTELLIGENCE DISPLAY
-===================================== */
 function analyse(){
 
  if(ticks.length < 30) return;
@@ -1061,10 +1075,8 @@ function analyse(){
  $("hotDigit").textContent = sorted[0].digit;
  $("coldDigit").textContent = sorted[9].digit;
 
- const total = recent.length;
-
  const even = recent.filter(t=>t.digit%2===0).length;
- const odd = total-even;
+ const odd = recent.length-even;
 
  $("evenOdd").textContent = "E " + even + " / O " + odd;
 
@@ -1087,16 +1099,17 @@ function analyse(){
 
 /* ---------------- DIGIT DISPLAY ---------------- */
 
-
 function renderDigits(){
 
  const box = $("digits");
-
  box.innerHTML = "";
 
  const total = counts.reduce((a,b)=>a+b,0);
-
  const maximum = Math.max(...counts);
+
+ const latestDigit = ticks.length
+  ? ticks[ticks.length-1].digit
+  : null;
 
  counts.forEach((count,digit)=>{
 
@@ -1108,32 +1121,25 @@ function renderDigits(){
 
   div.className = "digit";
 
-  if(ticks.length &&
-     ticks[ticks.length-1].digit === digit){
-
+  if(latestDigit === digit){
    div.classList.add("active");
-
   }
 
   if(total && count === maximum){
    div.classList.add("hot");
   }
 
-  const number = document.createElement("span");
-  number.textContent = digit;
-
-  const percentage = document.createElement("span");
-  percentage.className = "percent";
-  percentage.textContent = percent+"%";
-
-  div.appendChild(number);
-  div.appendChild(percentage);
+  div.innerHTML = `
+   <span>${digit}</span>
+   <span class="percent">${percent}%</span>
+  `;
 
   box.appendChild(div);
 
  });
 
 }
+
 
 
 /* ---------------- INTELLIGENT PREDICTIONS ---------------- */
@@ -1144,30 +1150,22 @@ function updatePredictions(){
 
  if(!model) return;
 
- const first = ticks[ticks.length-1].price;
- const last = ticks[Math.max(0,ticks.length-10)].price;
-
- let direction = "SIDEWAYS";
-
- if(first > last) direction = "UP";
- if(first < last) direction = "DOWN";
-
- $("futureDirection").textContent = direction;
-
- $("nextTick").textContent =
-  model.topThree[0].digit;
-
- $("followingTick").textContent =
-  model.topThree[1].digit;
-
  const candidates = model.topThree;
 
- const signal =
-  model.agreementScore >= 50
-   ? "QUALIFIED WATCH"
-   : "NO QUALIFIED SIGNAL";
+ $("candidate").textContent =
+  candidates[0].digit;
 
- $("signal").textContent = signal;
+ $("nextTick").textContent =
+  candidates[0].digit;
+
+ $("followingTick").textContent =
+  candidates[1].digit;
+
+ $("futureDirection").textContent =
+  model.agreementScore >= 50
+   ? "STATISTICAL AGREEMENT"
+   : "UNCERTAIN";
+
  renderPredictionPanel(model);
 
 }
@@ -1273,9 +1271,7 @@ function automaticScan(){
 
  const candidate = model.topThree[0];
 
- const agreement = model.agreementScore;
-
- const qualified = agreement >= 50;
+ const qualified = model.agreementScore >= 50;
 
  const item = {
 
@@ -1293,14 +1289,9 @@ function automaticScan(){
 
  scanHistory.unshift(item);
 
- scanHistory=scanHistory.slice(0,10);
+ scanHistory = scanHistory.slice(0,10);
 
  renderHistory();
-
- $("signal").textContent =
-  qualified
-   ? "QUALIFIED WATCH"
-   : "NO QUALIFIED SIGNAL";
 
 }
 
