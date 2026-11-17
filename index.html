@@ -1040,93 +1040,48 @@ function getOverdueDigits(){
 /* =====================================
    MARKET INTELLIGENCE DISPLAY
 ===================================== */
+function analyse(){
 
-function renderMarketIntelligence(){
+ if(ticks.length < 30) return;
 
- const market = analyseMarketCondition();
+ const recent = ticks.slice(-100);
 
- if(!market) return;
+ counts = Array(10).fill(0);
 
- let panel = document.getElementById("marketIntel");
+ recent.forEach(t=>{
+  counts[t.digit]++;
+ });
 
- if(!panel){
+ renderDigits();
 
-  panel = document.createElement("section");
-  panel.id = "marketIntel";
+ const sorted = counts
+  .map((count,digit)=>({digit,count}))
+  .sort((a,b)=>b.count-a.count);
 
-  panel.style.cssText = `
-   background:#111827;
-   border:1px solid #344054;
-   border-radius:15px;
-   padding:18px;
-   margin:18px 0;
-   color:white;
-  `;
+ $("hotDigit").textContent = sorted[0].digit;
+ $("coldDigit").textContent = sorted[9].digit;
 
-  const prediction = document.getElementById("predictionPanel");
+ const total = recent.length;
 
-  if(prediction){
-   prediction.insertAdjacentElement("afterend",panel);
-  }else{
-   document.body.appendChild(panel);
-  }
+ const even = recent.filter(t=>t.digit%2===0).length;
+ const odd = total-even;
 
- }
+ $("evenOdd").textContent = "E " + even + " / O " + odd;
 
- const overdue = getOverdueDigits();
+ const model = buildPredictionModel();
 
- panel.innerHTML = `
-  <h2 style="color:#58d6ff;margin-top:0">
-   MARKET INTELLIGENCE
-  </h2>
+ if(!model) return;
 
-  <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+ $("candidate").textContent = model.topDigit;
 
-   <div style="background:#202d43;padding:13px;border-radius:10px">
-    <small>MARKET CONDITION</small>
-    <h3>${market.condition}</h3>
-   </div>
+ $("confidence").textContent =
+  model.agreementScore.toFixed(1)+"%";
 
-   <div style="background:#202d43;padding:13px;border-radius:10px">
-    <small>PRICE DIRECTION</small>
-    <h3>${market.direction}</h3>
-   </div>
+ updatePredictions();
 
-   <div style="background:#202d43;padding:13px;border-radius:10px">
-    <small>UPWARD TICKS</small>
-    <h3>${market.upward}</h3>
-   </div>
+ updateIndicators();
 
-   <div style="background:#202d43;padding:13px;border-radius:10px">
-    <small>DOWNWARD TICKS</small>
-    <h3>${market.downward}</h3>
-   </div>
-
-  </div>
-
-  <h3>OVERDUE DIGITS</h3>
-
-  <p style="color:#aab5c5">
-   ${overdue.slice(0,3).map(x=>
-    "Digit "+x.digit+" ("+x.overdue+" ticks)"
-   ).join(" | ")}
-  </p>
-
-  <small style="color:#aab5c5">
-   Overdue does not mean a digit is more likely to appear next.
-  </small>
- `;
-
-}
- panel.innerHTML = html;
-
-}
-
-updatePredictions();
-
-updateIndicators();
-
-renderMarketIntelligence();
+ renderMarketIntelligence();
 
 }
 
@@ -1932,7 +1887,8 @@ function renderMarketIntelligence(){
    Overdue does not mean a digit is more likely to appear next.
   </small>
  `;
-
+ 
+}
 
 /* ---------------- INITIALISE ---------------- */
 
